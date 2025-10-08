@@ -1,0 +1,10 @@
+﻿@model ERPSystem.Models.User
+
+<h2>Eliminar Usuario</h2>
+<p>¿Seguro que quieres eliminar a <strong>@Model.Username</strong>?</p>
+
+<form asp-action="DeleteConfirmed" method="post">
+    <input type="hidden" asp-for="UserId" />
+    <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

@@ -1,0 +1,16 @@
+﻿@model ERPSystem.Models.Provider
+@{
+    ViewData["Title"] = "Eliminar Proveedor";
+}
+
+<h2>Eliminar Proveedor</h2>
+
+<div class="alert alert-danger">
+    ¿Está seguro que desea eliminar al proveedor <strong>@Model.Name</strong>?
+</div>
+
+<form asp-action="DeleteConfirmed" method="post">
+    <input type="hidden" asp-for="ProviderId" />
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>
