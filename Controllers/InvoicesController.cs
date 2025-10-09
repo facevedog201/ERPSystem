@@ -1,11 +1,14 @@
 ﻿using ERPSystem.Data;
+using ERPSystem.Helpers;
 using ERPSystem.Models;
 using ERPSystem.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace ERPSystem.Controllers
 {
+    [Authorize]
     public class InvoicesController : Controller
     {
         private readonly AppDbContext _context;
@@ -18,17 +21,27 @@ namespace ERPSystem.Controllers
         }
 
         // LISTAR FACTURAS
-        public IActionResult Index()
+        public IActionResult Index(string search)
         {
+            ViewBag.Search = search;
+
             var invoices = _context.Invoices
                 .Include(i => i.Client)
                 .Include(i => i.InvoiceDetails)
                     .ThenInclude(d => d.Service)
                 .Include(i => i.Payments)
-                .ToList();
+                .AsQueryable();
 
-            return View(invoices);
+            if (!string.IsNullOrEmpty(search))
+            {
+                invoices = invoices.Where(i =>
+                    i.InvoiceId.ToString().Contains(search) ||
+                    i.Client.Name.Contains(search));
+            }
+
+            return View(invoices.ToList());
         }
+
 
         // DETALLES
         public IActionResult Details(int id)
@@ -42,10 +55,14 @@ namespace ERPSystem.Controllers
 
             if (invoice == null) return NotFound();
 
+            invoice.UpdateStatus();
+            _context.SaveChanges();
+
             return View(invoice);
         }
 
         // CREAR (GET)
+        [RoleAuthorize("Admin", "Contador")]
         public IActionResult Create()
         {
             ViewBag.Clients = _context.Clients.ToList();
@@ -56,19 +73,16 @@ namespace ERPSystem.Controllers
         // CREAR (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RoleAuthorize("Admin", "Contador")]
         public IActionResult Create(int clientId, int[] selectedServices, int[] quantities)
         {
-            // Validaciones básicas
-            if (clientId == 0)
-                ModelState.AddModelError("", "Debe seleccionar un cliente.");
-
-            if (selectedServices == null || selectedServices.Length == 0)
-                ModelState.AddModelError("", "Debe seleccionar al menos un servicio.");
+            if (clientId == 0) ModelState.AddModelError("", "Debe seleccionar un cliente.");
+            if (selectedServices == null || selectedServices.Length == 0) ModelState.AddModelError("", "Debe seleccionar al menos un servicio.");
 
             if (!ModelState.IsValid)
             {
                 ViewBag.Clients = _context.Clients.ToList();
-                ViewBag.Services = _context.Services.Where(s => s.IsActive).ToList();
+                ViewBag.Services = _context.Services.ToList();
                 return View();
             }
 
@@ -79,13 +93,12 @@ namespace ERPSystem.Controllers
                 InvoiceDetails = new List<InvoiceDetail>()
             };
 
-            // Solo agregar servicios con cantidad > 0
             for (int i = 0; i < selectedServices.Length; i++)
             {
                 int serviceId = selectedServices[i];
                 int qty = quantities[i];
 
-                if (qty <= 0) continue; // Ignorar si la cantidad es 0 o negativa
+                if (qty <= 0) continue;
 
                 var service = _context.Services.Find(serviceId);
                 if (service != null)
@@ -99,40 +112,54 @@ namespace ERPSystem.Controllers
                 }
             }
 
-            if (!invoice.InvoiceDetails.Any())
-            {
-                ModelState.AddModelError("", "Debe agregar al menos un servicio con cantidad válida.");
-                ViewBag.Clients = _context.Clients.ToList();
-                ViewBag.Services = _context.Services.Where(s => s.IsActive).ToList();
-                return View();
-            }
-
-            // Calcular total
             invoice.Total = invoice.InvoiceDetails.Sum(d => d.Quantity * d.Price);
-
             _context.Invoices.Add(invoice);
             _context.SaveChanges();
 
-            _auditService?.Log("Create", "Invoice", invoice.InvoiceId,
+            _auditService.Log("Create", "Invoice", invoice.InvoiceId,
                 $"Se creó la factura #{invoice.InvoiceId} para el cliente {invoice.ClientId}");
 
             return RedirectToAction("Index");
         }
 
-
-        // AGREGAR PAGO
-        public IActionResult AddPayment(int id)
+        // ELIMINAR (GET)
+        [RoleAuthorize("Admin", "Contador")]
+        public IActionResult Delete(int id)
         {
             var invoice = _context.Invoices
-                .Include(i => i.Payments)
-                .Include(i => i.InvoiceDetails)
+                .Include(i => i.Client)
                 .FirstOrDefault(i => i.InvoiceId == id);
 
             if (invoice == null) return NotFound();
-
             return View(invoice);
         }
 
+        // ELIMINAR (POST)
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        [RoleAuthorize("Admin", "Contador")]
+        public IActionResult DeleteConfirmed(int id)
+        {
+            var invoice = _context.Invoices
+                .Include(i => i.InvoiceDetails)
+                .Include(i => i.Payments)
+                .FirstOrDefault(i => i.InvoiceId == id);
+
+            if (invoice != null)
+            {
+                _context.InvoiceDetails.RemoveRange(invoice.InvoiceDetails);
+                _context.Payments.RemoveRange(invoice.Payments);
+                _context.Invoices.Remove(invoice);
+                _context.SaveChanges();
+
+                _auditService.Log("Delete", "Invoice", invoice.InvoiceId,
+                    $"Se eliminó la factura #{invoice.InvoiceId} para el cliente {invoice.ClientId}");
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // AGREGAR PAGO
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult AddPayment(int invoiceId, decimal amount, string notes)
@@ -142,7 +169,27 @@ namespace ERPSystem.Controllers
                 .FirstOrDefault(i => i.InvoiceId == invoiceId);
 
             if (invoice == null) return NotFound();
-            if (amount <= 0) return BadRequest("Monto inválido.");
+
+            invoice.UpdateStatus();
+
+            if (invoice.Status == InvoiceStatus.Paid)
+            {
+                TempData["Error"] = "Factura ya pagada, no se pueden registrar más pagos.";
+                return RedirectToAction("Details", new { id = invoiceId });
+            }
+
+            var remaining = invoice.Total - invoice.PaidAmount;
+            if (amount <= 0)
+            {
+                TempData["Error"] = "El monto debe ser mayor a 0.";
+                return RedirectToAction("Details", new { id = invoiceId });
+            }
+
+            if (amount > remaining)
+            {
+                TempData["Error"] = $"El monto excede el saldo pendiente ({remaining:C}).";
+                return RedirectToAction("Details", new { id = invoiceId });
+            }
 
             var payment = new Payment
             {
@@ -156,9 +203,7 @@ namespace ERPSystem.Controllers
             invoice.UpdateStatus();
 
             _context.SaveChanges();
-
-            _auditService.Log("AddPayment", "Invoice", invoiceId,
-                $"Se registró un pago de {amount:C} para la factura #{invoiceId}");
+            TempData["Success"] = $"Pago de {amount:C} registrado correctamente.";
 
             return RedirectToAction("Details", new { id = invoiceId });
         }
