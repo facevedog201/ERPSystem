@@ -1,9 +1,11 @@
-using System.Diagnostics;
 using ERPSystem.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace ERPSystem.Controllers
 {
+    [Authorize] // Solo usuarios autenticados pueden acceder a este controlador
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
