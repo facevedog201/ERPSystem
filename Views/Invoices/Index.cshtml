@@ -29,7 +29,6 @@
                 <td>@invoice.Total.ToString("C")</td>
                 <td>
                     <a asp-action="Details" asp-route-id="@invoice.InvoiceId" class="btn btn-info btn-sm">Ver</a>
-                    <a asp-action="Edit" asp-route-id="@invoice.InvoiceId" class="btn btn-warning btn-sm">Editar</a>
                     <a asp-action="Delete" asp-route-id="@invoice.InvoiceId" class="btn btn-danger btn-sm">Eliminar</a>
                 </td>
             </tr>

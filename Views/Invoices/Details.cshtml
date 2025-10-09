@@ -8,7 +8,9 @@
 <div>
     <strong>Cliente:</strong> @Model.Client.Name <br />
     <strong>Fecha:</strong> @Model.InvoiceDate.ToString("dd/MM/yyyy") <br />
-    <strong>Total:</strong> @Model.Total.ToString("C")
+    <strong>Total:</strong> @Model.Total.ToString("C") <br />
+    <strong>Pagado:</strong> @Model.PaidAmount.ToString("C") <br />
+    <strong>Estado:</strong> @Model.Status
 </div>
 
 <h4 class="mt-3">Servicios</h4>
@@ -34,7 +36,31 @@
     </tbody>
 </table>
 
+<h4 class="mt-3">Pagos</h4>
+@if (Model.Payments.Any())
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Monto</th>
+                <th>Notas</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model.Payments)
+            {
+                <tr>
+                    <td>@p.PaymentDate.ToString("dd/MM/yyyy")</td>
+                    <td>@p.Amount.ToString("C")</td>
+                    <td>@p.Notes</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
 <p>
-    <a asp-action="Edit" asp-route-id="@Model.InvoiceId" class="btn btn-warning">Editar</a>
     <a asp-action="Index" class="btn btn-secondary">Volver</a>
+    <a asp-action="AddPayment" asp-route-id="@Model.InvoiceId" class="btn btn-success">Agregar Pago</a>
 </p>

@@ -52,7 +52,21 @@ namespace ERPSystem.Controllers
             HttpContext.Session.SetString("Username", user.Username);
             HttpContext.Session.SetString("Role", user.Role.ToString());
 
-            return RedirectToAction("Index", "Home");
+            // Redirigir según el rol del usuario
+            switch (user.Role)
+            {
+                case UserRole.Admin:
+                    return RedirectToAction("Index", "AdminDashboard");
+
+                case UserRole.Recepcion:
+                    return RedirectToAction("Index", "Facturacion");
+
+                case UserRole.Contador:
+                    return RedirectToAction("Index", "Reportes");
+
+                default:
+                    return RedirectToAction("Index", "Home");
+            }
         }
 
         // GET: /Auth/Logout

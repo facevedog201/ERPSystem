@@ -75,14 +75,17 @@ namespace ERPSystem.Controllers
                 new ClaimsPrincipal(claimsIdentity),
                 authProperties);
 
-            // Redirigir según rol
-            return user.Role switch
-            {
-                UserRole.Admin => RedirectToAction("Index", "Dashboard"),
-                UserRole.Recepcion => RedirectToAction("Index", "Recepcion"),
-                UserRole.Contador => RedirectToAction("Index", "Contabilidad"),
-                _ => RedirectToAction("Index", "Home"),
-            };
+            // Redirigir siempre al Home o Dashboard
+            return RedirectToAction("Index", "Home");
+
+            //// Redirigir según rol
+            //return user.Role switch
+            //{
+            //    UserRole.Admin => RedirectToAction("Index", "Home"),
+            //    UserRole.Recepcion => RedirectToAction("Index", "Invoices"),
+            //    UserRole.Contador => RedirectToAction("Index", "Contabilidad"),
+            //    _ => RedirectToAction("Index", "Home"),
+            //};
         }
 
         // Logout

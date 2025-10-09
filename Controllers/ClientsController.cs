@@ -1,4 +1,5 @@
 ﻿using ERPSystem.Data;
+using ERPSystem.Helpers;
 using ERPSystem.Models;
 using ERPSystem.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +8,7 @@ using System.Linq;
 
 namespace ERPSystem.Controllers
 {
+    [RoleAuthorize("Admin","Recepcion","Contabilidad")]
     public class ClientsController : Controller
     {
         private readonly AppDbContext _context;

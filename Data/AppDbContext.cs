@@ -17,6 +17,7 @@ namespace ERPSystem.Data
         public DbSet<InvoiceDetail> InvoiceDetails { get; set; }
         public DbSet<ServiceProvider> ServiceProviders { get; set; } // Opcional
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<Payment> Payments { get; set; }
 
     }
 }

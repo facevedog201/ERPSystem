@@ -5,9 +5,11 @@ using ERPSystem.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
+using ERPSystem.Helpers;
 
 namespace ERPSystem.Controllers
 {
+    [RoleAuthorize("Admin")]
     public class UsersController : Controller
     {
         private readonly AppDbContext _context;
