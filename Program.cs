@@ -1,6 +1,7 @@
 using ERPSystem.Data;
-using Microsoft.EntityFrameworkCore;
+using ERPSystem.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/Login/AccessDenied"; // Página acceso denegado
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
     });
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<AuditService>();
+
 
 builder.Services.AddSession();
 

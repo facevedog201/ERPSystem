@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using ERPSystem.Data;
+﻿using ERPSystem.Data;
 using ERPSystem.Models;
+using ERPSystem.Services;
+using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 
 namespace ERPSystem.Controllers
@@ -8,6 +9,8 @@ namespace ERPSystem.Controllers
     public class ProvidersController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly AuditService _auditService;
+
 
         public ProvidersController(AppDbContext context)
         {
@@ -36,6 +39,7 @@ namespace ERPSystem.Controllers
             {
                 _context.Providers.Add(provider);
                 _context.SaveChanges();
+                _auditService.Log("Create", "Provider", provider.ProviderId, $"Se creó el Proveedor {provider.ProviderId}");
                 return RedirectToAction(nameof(Index));
             }
             return View(provider);
@@ -58,6 +62,8 @@ namespace ERPSystem.Controllers
             {
                 _context.Providers.Update(provider);
                 _context.SaveChanges();
+                _auditService.Log("Edit", "Provider", provider.ProviderId, $"Se creó el Proveedor {provider.ProviderId}");
+
                 return RedirectToAction(nameof(Index));
             }
             return View(provider);
@@ -81,6 +87,7 @@ namespace ERPSystem.Controllers
 
             _context.Providers.Remove(provider);
             _context.SaveChanges();
+            _auditService.Log("Delete", "Provider", provider.ProviderId, $"Se creó el Proveedor {provider.ProviderId}");
             return RedirectToAction(nameof(Index));
         }
     }

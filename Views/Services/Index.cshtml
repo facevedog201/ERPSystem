@@ -1,0 +1,40 @@
+﻿@model IEnumerable<ERPSystem.Models.Service>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Servicios";
+}
+
+<div class="d-flex justify-content-between mb-3">
+    <h2>Servicios</h2>
+    <a class="btn btn-success" asp-action="Create">Crear Nuevo Servicio</a>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Precio</th>
+            <th>Tipo</th>
+            <th>Activo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.Description</td>
+                <td>@item.Price.ToString("C")</td>
+                <td>@item.Type</td>
+                <td>@(item.IsActive ? "Sí" : "No")</td>
+                <td>
+                    <a class="btn btn-sm btn-primary" asp-action="Edit" asp-route-id="@item.ServiceId">Editar</a>
+                    <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@item.ServiceId">Detalles</a>
+                    <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.ServiceId">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

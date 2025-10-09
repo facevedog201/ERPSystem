@@ -1,0 +1,22 @@
+﻿@model ERPSystem.Models.Invoice
+@{
+    ViewData["Title"] = "Eliminar Factura";
+}
+
+<h2>Eliminar Factura #@Model.InvoiceId</h2>
+
+<div class="alert alert-danger">
+    ¿Está seguro que desea eliminar esta factura?
+</div>
+
+<div>
+    <strong>Cliente:</strong> @Model.Client.Name <br />
+    <strong>Fecha:</strong> @Model.InvoiceDate.ToString("dd/MM/yyyy") <br />
+    <strong>Total:</strong> @Model.Total.ToString("C")
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="InvoiceId" />
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

@@ -1,16 +1,19 @@
-﻿using ERPSystem.Data;
+﻿using BCrypt.Net;
+using ERPSystem.Data;
 using ERPSystem.Models;
+using ERPSystem.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using BCrypt.Net;
 
 namespace ERPSystem.Controllers
 {
     public class LoginController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly AuditService _auditService;
+
 
         public LoginController(AppDbContext context)
         {

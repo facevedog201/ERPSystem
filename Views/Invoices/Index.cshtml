@@ -1,0 +1,38 @@
+﻿@model IEnumerable<ERPSystem.Models.Invoice>
+@{
+    ViewData["Title"] = "Facturas";
+}
+
+<h2>Facturas</h2>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Crear Nueva Factura</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Factura #</th>
+            <th>Cliente</th>
+            <th>Fecha</th>
+            <th>Total</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var invoice in Model)
+        {
+            <tr>
+                <td>@invoice.InvoiceId</td>
+                <td>@invoice.Client.Name</td>
+                <td>@invoice.InvoiceDate.ToString("dd/MM/yyyy")</td>
+                <td>@invoice.Total.ToString("C")</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@invoice.InvoiceId" class="btn btn-info btn-sm">Ver</a>
+                    <a asp-action="Edit" asp-route-id="@invoice.InvoiceId" class="btn btn-warning btn-sm">Editar</a>
+                    <a asp-action="Delete" asp-route-id="@invoice.InvoiceId" class="btn btn-danger btn-sm">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

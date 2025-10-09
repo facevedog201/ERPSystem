@@ -1,0 +1,59 @@
+﻿@model ERPSystem.Models.Invoice
+@{
+    ViewData["Title"] = "Editar Factura";
+    var clients = ViewBag.Clients as List<ERPSystem.Models.Client>;
+    var services = ViewBag.Services as List<ERPSystem.Models.Service>;
+}
+
+<h2>Editar Factura</h2>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="InvoiceId" />
+
+    <div class="mb-3">
+        <label>Cliente</label>
+
+        @Html.DropDownListFor(
+                m => m.ClientId,                // propiedad del modelo que guarda el ClientId
+                new SelectList(clients, "ClientId", "Name", Model.ClientId), // lista de clientes
+                "Seleccione un cliente",        // opción por defecto (placeholder)
+                new { @class = "form-select" }  // atributos HTML (Bootstrap)
+         )
+
+        @* <select asp-for="ClientId" class="form-select">
+            @foreach (var c in clients)
+            {
+                <option value="@c.ClientId" @(c.ClientId == Model.ClientId ? "selected" : "")>@c.Name</option>
+            }
+        </select> *@
+    </div>
+
+    <h4>Servicios</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Servicio</th>
+                <th>Precio</th>
+                <th>Cantidad</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < services.Count; i++)
+            {
+                var detail = Model.InvoiceDetails.FirstOrDefault(d => d.ServiceId == services[i].ServiceId);
+                <tr>
+                    <td>
+                        <input type="hidden" name="serviceIds" value="@services[i].ServiceId" />
+                        @services[i].Name
+                    </td>
+                    <td>@services[i].Price.ToString("C")</td>
+                    <td>
+                        <input type="number" name="quantities" value="@(detail?.Quantity ?? 0)" class="form-control" min="0" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-primary">Actualizar Factura</button>
+</form>

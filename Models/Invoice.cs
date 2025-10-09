@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ERPSystem.Models
 {
@@ -9,13 +9,15 @@ namespace ERPSystem.Models
         [Key]
         public int InvoiceId { get; set; }
 
-        [ForeignKey("Client")]
         public int ClientId { get; set; }
-
         public Client Client { get; set; }
 
-        public DateTime Date { get; set; } = DateTime.Now;
+        public DateTime InvoiceDate { get; set; } = DateTime.Now;
 
-        public decimal Total { get; set; }
+        public decimal Total { get; set; } = 0;
+
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        public ICollection<InvoiceDetail> InvoiceDetails { get; set; }
     }
 }

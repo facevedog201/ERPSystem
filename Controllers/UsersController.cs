@@ -1,6 +1,7 @@
 ﻿using BCrypt.Net;
 using ERPSystem.Data;
 using ERPSystem.Models;
+using ERPSystem.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
@@ -10,10 +11,13 @@ namespace ERPSystem.Controllers
     public class UsersController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly AuditService _auditService;
 
-        public UsersController(AppDbContext context)
+
+        public UsersController(AppDbContext context, AuditService auditService)
         {
             _context = context;
+            _auditService = auditService;
         }
 
         // LISTAR USUARIOS
@@ -61,6 +65,7 @@ namespace ERPSystem.Controllers
 
             _context.Add(user);
             await _context.SaveChangesAsync();
+            _auditService.Log("Create", "User", user.UserId, $"Se creó el usuario {user.Username}");
             return RedirectToAction(nameof(Index));
         }
 
@@ -100,6 +105,7 @@ namespace ERPSystem.Controllers
                     else
                         throw;
                 }
+                _auditService.Log("Edit", "User", user.UserId, $"Se editó el usuario {user.Username}");
                 return RedirectToAction(nameof(Index));
             }
             return View(user);
@@ -121,6 +127,7 @@ namespace ERPSystem.Controllers
             var user = _context.Users.Find(id);
             _context.Users.Remove(user);
             _context.SaveChanges();
+            _auditService.Log("Delete", "User", user.UserId, $"Se eliminó el usuario {user.Username}");
             return RedirectToAction(nameof(Index));
         }
     }

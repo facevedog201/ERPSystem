@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using ERPSystem.Data;
+﻿using ERPSystem.Data;
 using ERPSystem.Models;
+using ERPSystem.Services;
+using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 
 
@@ -9,10 +10,13 @@ namespace ERPSystem.Controllers
     public class ClientsController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly AuditService _auditService;
 
-        public ClientsController(AppDbContext context)
+        public ClientsController(AppDbContext context, AuditService auditService)
         {
             _context = context;
+            _auditService = auditService;
+
         }
 
         // GET: /Clients
@@ -37,6 +41,7 @@ namespace ERPSystem.Controllers
             {
                 _context.Clients.Add(client);
                 _context.SaveChanges();
+                _auditService.Log("Create", "Client", client.ClientId,$"Se creó el Cliente {client.ClientId}");
                 return RedirectToAction(nameof(Index));
             }
             return View(client);
@@ -59,6 +64,7 @@ namespace ERPSystem.Controllers
             {
                 _context.Clients.Update(client);
                 _context.SaveChanges();
+                _auditService.Log("Edit", "Client", client.ClientId, $"Se edito el Cliente {client.ClientId}");
                 return RedirectToAction(nameof(Index));
             }
             return View(client);
@@ -82,6 +88,7 @@ namespace ERPSystem.Controllers
 
             _context.Clients.Remove(client);
             _context.SaveChanges();
+            _auditService.Log("Delete", "Client", client.ClientId, $"Se elimino el Cliente {client.ClientId}");
             return RedirectToAction(nameof(Index));
         }
     }
