@@ -12,9 +12,10 @@ namespace ERPSystem.Controllers
         private readonly AuditService _auditService;
 
 
-        public ProvidersController(AppDbContext context)
+        public ProvidersController(AppDbContext context, AuditService auditService)
         {
             _context = context;
+            _auditService = auditService;
         }
 
         // Listar proveedores

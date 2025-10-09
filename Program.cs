@@ -8,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Configurar EF con SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+//Agregar el servicio para exportar
+builder.Services.AddScoped<ERPSystem.Services.ExportService>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

@@ -15,9 +15,10 @@ namespace ERPSystem.Controllers
         private readonly AuditService _auditService;
 
 
-        public LoginController(AppDbContext context)
+        public LoginController(AppDbContext context, AuditService auditService)
         {
             _context = context;
+            _auditService = auditService;
         }
 
         // GET: Login

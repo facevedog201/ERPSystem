@@ -1,0 +1,130 @@
+﻿@{
+    ViewData["Title"] = "Dashboard de Reportes";
+    var salesByMonth = ViewBag.SalesByMonth as IEnumerable<dynamic> ?? new List<dynamic>();
+    var statusSummary = ViewBag.StatusSummary as IEnumerable<dynamic> ?? new List<dynamic>();
+    var topClients = ViewBag.TopClients as IEnumerable<dynamic> ?? new List<dynamic>();
+    var clients = ViewBag.Clients as List<ERPSystem.Models.Client> ?? new List<ERPSystem.Models.Client>();
+    var selectedClientId = (ViewBag.SelectedClientId as int?) ?? 0;
+}
+
+<h2>Dashboard</h2>
+
+<form method="get" class="row g-2 mb-4">
+    <div class="col-md-3">
+        <label class="form-label">Desde</label>
+        <input type="date" name="from" class="form-control" value="@((ViewBag.From as DateTime?)?.ToString("yyyy-MM-dd"))" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Hasta</label>
+        <input type="date" name="to" class="form-control" value="@((ViewBag.To as DateTime?)?.ToString("yyyy-MM-dd"))" />
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Cliente</label>
+        <select name="clientId" class="form-select">
+            <option value="0" selected="@(selectedClientId == 0 ? "selected" : null)">-- Todos --</option>
+                @foreach (var c in clients)
+                {
+                        if (selectedClientId == c.ClientId)
+                        {
+                        <option value="@c.ClientId" selected>@c.Name</option>
+                        }
+        else
+        {
+            <option value="@c.ClientId">@c.Name</option>
+        }
+    }
+        </select>
+
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+        <button class="btn btn-primary w-100">Filtrar</button>
+    </div>
+</form>
+
+<div class="row row-cols-1 row-cols-md-4 g-3 mb-4">
+    @await Html.PartialAsync("_KpiCard", (Title: "Total facturado", Value: ((decimal)ViewBag.TotalFacturado).ToString("C"), IconClass: "bi bi-currency-dollar", ExtraClass: ""))
+    @await Html.PartialAsync("_KpiCard", (Title: "Total cobrado", Value: ((decimal)ViewBag.TotalCobrado).ToString("C"), IconClass: "bi bi-wallet2", ExtraClass: ""))
+    @await Html.PartialAsync("_KpiCard", (Title: "Pendiente", Value: ((decimal)ViewBag.TotalPendiente).ToString("C"), IconClass: "bi bi-hourglass-split", ExtraClass: ""))
+    @await Html.PartialAsync("_KpiCard", (Title: "Facturas", Value: ((int)ViewBag.CountInvoices).ToString(), IconClass: "bi bi-receipt", ExtraClass: ""))
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">Ventas por mes</div>
+            <div class="card-body">
+                <canvas id="salesChart" height="140"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header">Estado de facturas</div>
+            <div class="card-body">
+                <canvas id="statusChart" height="180"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Top clientes</div>
+            <div class="card-body">
+                <canvas id="clientsChart" height="140"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mb-4">
+    <a class="btn btn-outline-primary me-2" asp-action="Sales">Detalles de ventas</a>
+    <a class="btn btn-outline-primary me-2" asp-action="Clients">Reporte por clientes</a>
+    <a class="btn btn-outline-primary me-2" asp-action="ServicesReport">Reporte de servicios</a>
+    <a class="btn btn-outline-primary" asp-action="Payments">Historial de pagos</a>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Sales chart
+        const salesLabels = [@string.Join(",", (salesByMonth).Select(s => $"'{System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName((int)s.Month)} {s.Year}'"))];
+        const salesData = [@string.Join(",", (salesByMonth).Select(s => s.Total))];
+
+        new Chart(document.getElementById('salesChart'), {
+            type: 'bar',
+            data: {
+                labels: salesLabels,
+                datasets: [{
+                    label: 'Ventas',
+                    data: salesData
+                }]
+            },
+            options: { responsive: true }
+        });
+
+        // Status chart
+        const statusLabels = [@string.Join(",", (statusSummary).Select(s => $"'{s.Status}'"))];
+        const statusData = [@string.Join(",", (statusSummary).Select(s => s.Count))];
+
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: statusLabels,
+                datasets: [{ data: statusData }]
+            },
+            options: { responsive: true }
+        });
+
+        // Clients chart (top)
+        const topClientsLabels = [@string.Join(",", (topClients).Select(c => $"'{c.Client}'"))];
+        const topClientsData = [@string.Join(",", (topClients).Select(c => c.Total))];
+
+        new Chart(document.getElementById('clientsChart'), {
+            type: 'bar',
+            data: {
+                labels: topClientsLabels,
+                datasets: [{ label: 'Total', data: topClientsData }]
+            },
+            options: { indexAxis: 'y', responsive: true }
+        });
+    </script>
+}

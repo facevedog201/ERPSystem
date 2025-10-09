@@ -1,0 +1,29 @@
+﻿@{
+    ViewData["Title"] = "Reporte Clientes";
+    var data = ViewBag.Data as IEnumerable<dynamic> ?? new List<dynamic>();
+}
+
+<h2>Clientes</h2>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-3"><input type="date" name="from" class="form-control" value="@((ViewBag.From as DateTime?)?.ToString("yyyy-MM-dd"))" /></div>
+    <div class="col-md-3"><input type="date" name="to" class="form-control" value="@((ViewBag.To as DateTime?)?.ToString("yyyy-MM-dd"))" /></div>
+    <div class="col-md-6 text-end">
+        <a class="btn btn-outline-success" href="@Url.Action("Clients", new { from = (ViewBag.From as DateTime?)?.ToString("yyyy-MM-dd"), to = (ViewBag.To as DateTime?)?.ToString("yyyy-MM-dd") })">Exportar Excel (implementación futura)</a>
+    </div>
+</form>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark"><tr><th>Cliente</th><th>Cantidad Facturas</th><th>Total</th></tr></thead>
+    <tbody>
+        @foreach (var r in data)
+        {
+            <tr>
+                <td>@r.Client</td>
+                <td>@r.Count</td>
+                <td>@((decimal)r.Total).ToString("C")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+@await Html.PartialAsync("_BackToIndexButton", "Index")
