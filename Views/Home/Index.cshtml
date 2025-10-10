@@ -1,8 +1,61 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Inicio";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Bienvenido al PepiTO</h2>
+
+    <div class="row g-3">
+        <!-- Usuarios -->
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Usuarios</h5>
+                    <p class="card-text">Gestión de todos los usuarios del sistema</p>
+                    <span class="badge bg-success mb-2">@ViewBag.ActiveUsers Activos</span><br />
+                    <a asp-controller="Users" asp-action="Index" class="btn btn-primary mt-2">Ir</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clientes -->
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Clientes</h5>
+                    <p class="card-text">Gestión de clientes activos e inactivos</p>
+                    <span class="badge bg-success mb-2">@ViewBag.ActiveClients Activos</span><br />
+                    <a asp-controller="Clients" asp-action="Index" class="btn btn-primary mt-2">Ir</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Servicios -->
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Servicios</h5>
+                    <p class="card-text">Gestión de servicios activos e inactivos</p>
+                    <span class="badge bg-success mb-2">@ViewBag.ActiveServices Activos</span><br />
+                    <a asp-controller="Services" asp-action="Index" class="btn btn-primary mt-2">Ir</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Proveedores -->
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Proveedores</h5>
+                    <p class="card-text">Gestión de proveedores</p>
+                    <span class="badge bg-success mb-2">@ViewBag.ActiveProviders Activos</span><br />
+                    <a asp-controller="Providers" asp-action="Index" class="btn btn-primary mt-2">Ir</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5 text-center">
+        <small class="text-muted">PepiTO - Gestión Integral de Negocios</small>
+    </div>
 </div>

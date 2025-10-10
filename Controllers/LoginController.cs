@@ -1,57 +1,171 @@
-﻿using BCrypt.Net;
+﻿//using BCrypt.Net;
+//using ERPSystem.Data;
+//using ERPSystem.Models;
+//using ERPSystem.Services;
+//using Microsoft.AspNetCore.Authentication;
+//using Microsoft.AspNetCore.Authentication.Cookies;
+//using Microsoft.AspNetCore.Mvc;
+//using System.Security.Claims;
+
+//namespace ERPSystem.Controllers
+//{
+//    public class LoginController : Controller
+//    {
+//        private readonly AppDbContext _context;
+//        private readonly AuditService _auditService;
+
+
+//        public LoginController(AppDbContext context, AuditService auditService)
+//        {
+//            _context = context;
+//            _auditService = auditService;
+//        }
+
+//        // GET: Login
+//        public IActionResult Index()
+//        {
+//            if (User.Identity != null && User.Identity.IsAuthenticated)
+//            {
+//                // Redirige según rol si ya está logueado
+//                return User.IsInRole("Admin") ? RedirectToAction("Index", "Dashboard") :
+//                       User.IsInRole("Recepcion") ? RedirectToAction("Index", "Recepcion") :
+//                       User.IsInRole("Contador") ? RedirectToAction("Index", "Contabilidad") :
+//                       RedirectToAction("Index", "Home");
+//            }
+
+//            return View();
+//        }
+
+
+//        // POST: Login
+//        [HttpPost]
+//        [ValidateAntiForgeryToken]
+//        public async Task<IActionResult> Index(string username, string password)
+//        {
+//            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+//            {
+//                ModelState.AddModelError("", "Usuario o contraseña inválidos");
+//                return View();
+//            }
+
+//            var user = _context.Users.FirstOrDefault(u => u.Username == username);
+//            if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.Password))
+//            {
+//                ModelState.AddModelError("", "Usuario o contraseña inválidos");
+//                return View();
+//            }
+
+//            // Crear claims
+//            var claims = new List<Claim>
+//            {
+//                new Claim(ClaimTypes.Name, user.Username),
+//                new Claim(ClaimTypes.Role, user.Role.ToString()),
+//                new Claim("UserId", user.UserId.ToString())
+//            };
+
+//            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+//            var authProperties = new AuthenticationProperties
+//            {
+//                IsPersistent = true, // Mantener sesión
+//                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
+//            };
+
+//            await HttpContext.SignInAsync(
+//                CookieAuthenticationDefaults.AuthenticationScheme,
+//                new ClaimsPrincipal(claimsIdentity),
+//                authProperties);
+
+//            // Redirigir siempre al Home o Dashboard
+//            return RedirectToAction("Index", "Home");
+
+//            //// Redirigir según rol
+//            //return user.Role switch
+//            //{
+//            //    UserRole.Admin => RedirectToAction("Index", "Home"),
+//            //    UserRole.Recepcion => RedirectToAction("Index", "Invoices"),
+//            //    UserRole.Contador => RedirectToAction("Index", "Contabilidad"),
+//            //    _ => RedirectToAction("Index", "Home"),
+//            //};
+//        }
+
+//        // Logout
+//        public async Task<IActionResult> Logout()
+//        {
+//            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+//            return RedirectToAction("Index");
+//        }
+
+//        // Acceso denegado
+//        public IActionResult AccessDenied()
+//        {
+//            return View();
+//        }
+//    }
+//}
+
+
 using ERPSystem.Data;
 using ERPSystem.Models;
 using ERPSystem.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace ERPSystem.Controllers
 {
     public class LoginController : Controller
     {
         private readonly AppDbContext _context;
-        private readonly AuditService _auditService;
 
-
-        public LoginController(AppDbContext context, AuditService auditService)
+        public LoginController(AppDbContext context)
         {
             _context = context;
-            _auditService = auditService;
         }
 
-        // GET: Login
+        // GET: /Login
+        [HttpGet]
         public IActionResult Index()
         {
+            // Si ya hay sesión activa, redirigir al Home
             if (User.Identity != null && User.Identity.IsAuthenticated)
-            {
-                // Redirige según rol si ya está logueado
-                return User.IsInRole("Admin") ? RedirectToAction("Index", "Dashboard") :
-                       User.IsInRole("Recepcion") ? RedirectToAction("Index", "Recepcion") :
-                       User.IsInRole("Contador") ? RedirectToAction("Index", "Contabilidad") :
-                       RedirectToAction("Index", "Home");
-            }
+                return RedirectToAction("Index", "Home");
 
             return View();
         }
 
-
-        // POST: Login
+        // POST: /Login
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(string username, string password)
         {
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
-                ModelState.AddModelError("", "Usuario o contraseña inválidos");
+                ModelState.AddModelError(string.Empty, "Debe ingresar usuario y contraseña.");
                 return View();
             }
 
             var user = _context.Users.FirstOrDefault(u => u.Username == username);
-            if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.Password))
+
+            if (user == null || !PasswordHasherService.VerifyPassword(password, user.Password))
             {
-                ModelState.AddModelError("", "Usuario o contraseña inválidos");
+                ModelState.AddModelError(string.Empty, "Usuario o contraseña incorrectos.");
+                return View();
+            }
+
+
+            if (user == null)
+            {
+                ModelState.AddModelError(string.Empty, "Usuario o contraseña incorrectos.");
+                return View();
+            }
+
+            if (!user.IsActive)
+            {
+                ModelState.AddModelError(string.Empty, "Este usuario está inactivo. Contacte al administrador.");
                 return View();
             }
 
@@ -60,43 +174,36 @@ namespace ERPSystem.Controllers
             {
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Role, user.Role.ToString()),
+                new Claim("FullName", user.FullName ?? ""),
                 new Claim("UserId", user.UserId.ToString())
             };
 
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var claimsIdentity = new ClaimsIdentity(
+                claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
-            var authProperties = new AuthenticationProperties
-            {
-                IsPersistent = true, // Mantener sesión
-                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
-            };
-
+            // Crear cookie de sesión
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity),
-                authProperties);
+                new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTime.UtcNow.AddHours(8)
+                });
 
-            // Redirigir siempre al Home o Dashboard
             return RedirectToAction("Index", "Home");
-
-            //// Redirigir según rol
-            //return user.Role switch
-            //{
-            //    UserRole.Admin => RedirectToAction("Index", "Home"),
-            //    UserRole.Recepcion => RedirectToAction("Index", "Invoices"),
-            //    UserRole.Contador => RedirectToAction("Index", "Contabilidad"),
-            //    _ => RedirectToAction("Index", "Home"),
-            //};
         }
 
-        // Logout
+        // GET: /Login/Logout
+        [HttpGet]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", "Login");
         }
 
-        // Acceso denegado
+        // GET: /Login/AccessDenied
+        [HttpGet]
         public IActionResult AccessDenied()
         {
             return View();
