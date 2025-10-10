@@ -7,22 +7,35 @@
 
 <form asp-action="Edit" method="post">
     <input type="hidden" asp-for="ProviderId" />
+
     <div class="form-group mt-2">
         <label>Nombre</label>
         <input asp-for="Name" class="form-control" />
     </div>
+
     <div class="form-group mt-2">
         <label>Email</label>
         <input asp-for="Email" class="form-control" />
     </div>
+
     <div class="form-group mt-2">
         <label>Teléfono</label>
         <input asp-for="Phone" class="form-control" />
     </div>
+
     <div class="form-group mt-2">
         <label>Dirección</label>
         <input asp-for="Address" class="form-control" />
     </div>
+
+    @* Checkbox para controlar si el proveedor está activo, solo visible para Admin *@
+    @if (User.IsInRole(UserRole.Admin.ToString()))
+    {
+        <div class="form-check mt-3">
+            <input class="form-check-input" type="checkbox" asp-for="IsActive" />
+            <label class="form-check-label">Activo</label>
+        </div>
+    }
 
     <button type="submit" class="btn btn-success mt-3">Guardar</button>
     <a asp-action="Index" class="btn btn-secondary mt-3">Cancelar</a>

@@ -1,0 +1,9 @@
+﻿@model IEnumerable<ERPSystem.Models.Provider>
+@{
+    ViewData["Title"] = "Proveedores Inactivos";
+}
+
+<h2>Proveedores Inactivos</h2>
+<a class="btn btn-secondary mb-3" asp-action="Index">Volver a Proveedores Activos</a>
+
+@await Html.PartialAsync("_ProvidersTable", Model)

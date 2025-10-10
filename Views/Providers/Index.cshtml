@@ -3,32 +3,15 @@
     ViewData["Title"] = "Proveedores";
 }
 
-<h2>Proveedores</h2>
-<a class="btn btn-primary mb-3" asp-action="Create">Nuevo Proveedor</a>
-
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Nombre</th>
-            <th>Email</th>
-            <th>Teléfono</th>
-            <th>Dirección</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var provider in Model)
+<div class="d-flex justify-content-between mb-3">
+    <h2>Proveedores</h2>
+    <div>
+        <a class="btn btn-success" asp-action="Create">Nuevo Proveedor</a>
+        @if (User.IsInRole(UserRole.Admin.ToString()))
         {
-            <tr>
-                <td>@provider.Name</td>
-                <td>@provider.Email</td>
-                <td>@provider.Phone</td>
-                <td>@provider.Address</td>
-                <td>
-                    <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-id="@provider.ProviderId">Editar</a>
-                    <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@provider.ProviderId">Eliminar</a>
-                </td>
-            </tr>
+            <a class="btn btn-secondary" asp-action="InactiveProviders">Ver Inactivos</a>
         }
-    </tbody>
-</table>
+    </div>
+</div>
+
+@await Html.PartialAsync("_ProvidersTable", Model)

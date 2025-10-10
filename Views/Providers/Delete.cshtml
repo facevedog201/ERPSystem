@@ -9,7 +9,7 @@
     ¿Está seguro que desea eliminar al proveedor <strong>@Model.Name</strong>?
 </div>
 
-<form asp-action="DeleteConfirmed" method="post">
+<form asp-action="Delete" method="post">
     <input type="hidden" asp-for="ProviderId" />
     <button type="submit" class="btn btn-danger">Eliminar</button>
     <a asp-action="Index" class="btn btn-secondary">Cancelar</a>

@@ -1,0 +1,53 @@
+﻿@model IEnumerable<ERPSystem.Models.Provider>
+@using ERPSystem.Helpers
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Teléfono</th>
+            <th>Dirección</th>
+            <th>Activo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var provider in Model)
+        {
+            <tr>
+                <td>@provider.Name</td>
+                <td>@provider.Email</td>
+                <td>@provider.Phone</td>
+                <td>@provider.Address</td>
+                <td>
+                    <span class="badge @(provider.IsActive ? "bg-success" : "bg-danger")">
+                        @(provider.IsActive ? "Sí" : "No")
+                    </span>
+                </td>
+                <td>
+                    <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@provider.ProviderId">Detalles</a>
+
+                    @if (provider.IsActive)
+                    {
+                        @if (User.IsInRole(UserRole.Admin.ToString()) || User.IsInRole(UserRole.Recepcion.ToString()))
+                        {
+                            <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-id="@provider.ProviderId">Editar</a>
+                            @if (User.IsInRole(UserRole.Admin.ToString()))
+                            {
+                                <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@provider.ProviderId">Eliminar</a>
+                            }
+                        }
+                    }
+                    else
+                    {
+                        @if (User.IsInRole(UserRole.Admin.ToString()))
+                        {
+                            <a class="btn btn-sm btn-success" asp-action="Activate" asp-route-id="@provider.ProviderId">Reactivar</a>
+                        }
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

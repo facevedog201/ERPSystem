@@ -1,4 +1,4 @@
-﻿@model ERPSystem.Models.Service
+﻿@* @model ERPSystem.Models.Service
 @{
     Layout = "_Layout";
     ViewData["Title"] = "Eliminar Servicio";
@@ -13,5 +13,30 @@
 <form asp-action="Delete">
     <input type="hidden" asp-for="ServiceId" />
     <button type="submit" class="btn btn-danger">Eliminar</button>
+    <a class="btn btn-secondary" asp-action="Index">Cancelar</a>
+</form>
+ *@
+
+@model ERPSystem.Models.Service
+@using ERPSystem.Helpers
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Eliminar Servicio";
+}
+
+<h2>Eliminar Servicio</h2>
+
+<div class="alert alert-warning">
+    ¿Está seguro que desea <strong>desactivar</strong> el servicio <strong>@Model.Name</strong>?
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="ServiceId" />
+
+    @* Botón eliminar solo para Admin *@
+    @if (User.IsInRole(UserRole.Admin.ToString()))
+    {
+        <button type="submit" class="btn btn-danger">Desactivar</button>
+    }
     <a class="btn btn-secondary" asp-action="Index">Cancelar</a>
 </form>
