@@ -62,7 +62,7 @@ namespace ERPSystem.Controllers
         }
 
         // CREAR (GET)
-        [RoleAuthorize("Admin", "Contador")]
+        [RoleAuthorize("Admin", "Contador","Recepcion")]
         public IActionResult Create()
         {
             ViewBag.Clients = _context.Clients.ToList();
@@ -73,7 +73,7 @@ namespace ERPSystem.Controllers
         // CREAR (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RoleAuthorize("Admin", "Contador")]
+        [RoleAuthorize("Admin", "Contador","Recepcion")]
         public IActionResult Create(int clientId, int[] selectedServices, int[] quantities)
         {
             if (clientId == 0) ModelState.AddModelError("", "Debe seleccionar un cliente.");

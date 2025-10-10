@@ -1,16 +1,16 @@
 ﻿@model ERPSystem.Models.Client
 @{
-    ViewData["Title"] = "Eliminar Cliente";
+    ViewData["Title"] = "Dar de baja Cliente";
 }
 
-<h2>Eliminar Cliente</h2>
+<h2>Dar de baja Cliente</h2>
 
-<div class="alert alert-danger">
-    ¿Está seguro que desea eliminar al cliente <strong>@Model.Name</strong>?
+<div class="alert alert-warning">
+    ¿Está seguro que desea dar de baja al cliente <strong>@Model.Name</strong>?
 </div>
 
-<form asp-action="DeleteConfirmed" method="post">
+<form asp-action="Delete" method="post">
     <input type="hidden" asp-for="ClientId" />
-    <button type="submit" class="btn btn-danger">Eliminar</button>
+    <button type="submit" class="btn btn-danger">Dar de baja</button>
     <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
 </form>

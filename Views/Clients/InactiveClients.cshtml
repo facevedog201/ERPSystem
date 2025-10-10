@@ -1,12 +1,11 @@
 ﻿@model IEnumerable<ERPSystem.Models.Client>
 @{
-    ViewData["Title"] = "Clientes";
+    ViewData["Title"] = "Clientes Inactivos";
 }
 
-<h2>Clientes</h2>
+<h2>Clientes Inactivos</h2>
 
-<a class="btn btn-primary mb-3" asp-action="Create">Nuevo Cliente</a>
-<a class="btn btn-secondary mb-3" asp-action="InactiveClients">Clientes Inactivos</a>
+<a class="btn btn-primary mb-3" asp-action="Index">Volver a Clientes Activos</a>
 
 <table class="table table-bordered">
     <thead>
@@ -27,8 +26,9 @@
                 <td>@client.Phone</td>
                 <td>@client.Address</td>
                 <td>
-                    <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-id="@client.ClientId">Editar</a>
-                    <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@client.ClientId">Dar de baja</a>
+                    <form asp-action="Activate" asp-route-id="@client.ClientId" method="post" style="display:inline">
+                        <button type="submit" class="btn btn-success btn-sm">Reactivar</button>
+                    </form>
                 </td>
             </tr>
         }

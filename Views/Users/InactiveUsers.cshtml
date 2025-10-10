@@ -1,0 +1,29 @@
+﻿@model IEnumerable<ERPSystem.Models.User>
+
+<h2>Usuarios Inactivos</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Full Name</th>
+            <th>Role</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.Username</td>
+                <td>@user.FullName</td>
+                <td>@user.Role</td>
+                <td>
+                    <a asp-action="Activate" asp-route-id="@user.UserId" class="btn btn-success btn-sm">Reactivar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Index" class="btn btn-secondary mt-2">Volver a Usuarios Activos</a>

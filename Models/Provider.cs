@@ -8,7 +8,7 @@ namespace ERPSystem.Models
         [Key]
         public int ProviderId { get; set; }
 
-        [Required, StringLength(100)]
+        [StringLength(100)]
         public string Name { get; set; }
 
         [StringLength(100)]

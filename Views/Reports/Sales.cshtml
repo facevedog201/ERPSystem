@@ -3,6 +3,10 @@
     ViewData["Title"] = "Ventas";
     var list = Model.ToList();
 }
+@section Styles {
+    <link rel="stylesheet" href="~/css/print.css" />
+}
+
 
 <h2>Ventas</h2>
 
@@ -19,9 +23,8 @@
         </select>
     </div>
     <div class="col-md-3">
-        <button class="btn btn-primary">Filtrar</button>
-        <a class="btn btn-outline-success ms-2" href="@Url.Action("Sales", new { from = (ViewBag.From as DateTime?)?.ToString("yyyy-MM-dd"), to = (ViewBag.To as DateTime?)?.ToString("yyyy-MM-dd"), clientId = ViewBag.ClientId, export = "excel" })">Exportar Excel</a>
-        <a class="btn btn-outline-secondary ms-1" href="@Url.Action("Sales", new { from = (ViewBag.From as DateTime?)?.ToString("yyyy-MM-dd"), to = (ViewBag.To as DateTime?)?.ToString("yyyy-MM-dd"), clientId = ViewBag.ClientId, export = "pdf" })">Exportar PDF</a>
+        <button class="btn btn-primary"><i class="bi bi-funnel-fill"></i>Filtrar</button>
+        <a class="btn btn-outline-success ms-2" href="@Url.Action("Sales", new { from = (ViewBag.From as DateTime?)?.ToString("yyyy-MM-dd"), to = (ViewBag.To as DateTime?)?.ToString("yyyy-MM-dd"), clientId = ViewBag.ClientId, export = "excel" })"><i class="bi bi-file-earmark-excel-fill"></i>Exportar Excel</a>
     </div>
 </form>
 

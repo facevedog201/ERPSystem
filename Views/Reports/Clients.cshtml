@@ -1,20 +1,48 @@
 ﻿@{
     ViewData["Title"] = "Reporte Clientes";
     var data = ViewBag.Data as IEnumerable<dynamic> ?? new List<dynamic>();
+    decimal totalFacturado = data.Sum(d => (decimal)d.Total);
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/print.css" />
 }
 
-<h2>Clientes</h2>
+<!-- Encabezado visible solo en impresión -->
+<div class="print-header">
+    <img src="~/images/logo.png" alt="Logo" style="height:40px;" />
+    <div>ERPSystem - Reporte de Clientes</div>
+</div>
 
-<form method="get" class="row g-2 mb-3">
-    <div class="col-md-3"><input type="date" name="from" class="form-control" value="@((ViewBag.From as DateTime?)?.ToString("yyyy-MM-dd"))" /></div>
-    <div class="col-md-3"><input type="date" name="to" class="form-control" value="@((ViewBag.To as DateTime?)?.ToString("yyyy-MM-dd"))" /></div>
-    <div class="col-md-6 text-end">
-        <a class="btn btn-outline-success" href="@Url.Action("Clients", new { from = (ViewBag.From as DateTime?)?.ToString("yyyy-MM-dd"), to = (ViewBag.To as DateTime?)?.ToString("yyyy-MM-dd") })">Exportar Excel (implementación futura)</a>
+<h2 class="no-print">Clientes</h2>
+
+<!-- Filtros (no se imprimen) -->
+<form method="get" class="row g-2 mb-3 no-print">
+    <div class="col-md-3">
+        <label class="form-label">Desde</label>
+        <input type="date" name="from" class="form-control" value="@((ViewBag.From as DateTime?)?.ToString("yyyy-MM-dd"))" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Hasta</label>
+        <input type="date" name="to" class="form-control" value="@((ViewBag.To as DateTime?)?.ToString("yyyy-MM-dd"))" />
+    </div>
+    <div class="col-md-6 text-end d-flex align-items-end justify-content-end">
+        <button class="btn btn-primary me-2"><i class="bi bi-funnel-fill"></i>Filtrar</button>
+        <a class="btn btn-outline-success" href="@Url.Action("Clients", new { from = (ViewBag.From as DateTime?)?.ToString("yyyy-MM-dd"), to = (ViewBag.To as DateTime?)?.ToString("yyyy-MM-dd") })">
+            <i class="bi bi-file-earmark-excel-fill"></i>
+            Exportar Excel
+        </a>
     </div>
 </form>
 
+<!-- Tabla de clientes -->
 <table class="table table-bordered table-striped">
-    <thead class="table-dark"><tr><th>Cliente</th><th>Cantidad Facturas</th><th>Total</th></tr></thead>
+    <thead class="table-dark">
+        <tr>
+            <th>Cliente</th>
+            <th>Cantidad Facturas</th>
+            <th>Total</th>
+        </tr>
+    </thead>
     <tbody>
         @foreach (var r in data)
         {
@@ -24,6 +52,22 @@
                 <td>@((decimal)r.Total).ToString("C")</td>
             </tr>
         }
+        <tr class="table-total">
+            <td colspan="2">Total General</td>
+            <td>@totalFacturado.ToString("C")</td>
+        </tr>
     </tbody>
 </table>
-@await Html.PartialAsync("_BackToIndexButton", "Index")
+
+<!-- Botones de acción (no se imprimen) -->
+<div class="d-flex justify-content-between align-items-center mb-3 no-print">
+    <h2>Reporte de Clientes</h2>
+    <div>
+        <button class="btn btn-outline-primary me-2" onclick="window.print()">
+            <i class="bi bi-printer"></i> Imprimir
+        </button>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left-circle"></i> Volver
+        </a>
+    </div>
+</div>

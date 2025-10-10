@@ -8,16 +8,14 @@ namespace ERPSystem.Models
         [Key]
         public int ServiceId { get; set; }
 
-        [Required, StringLength(100)]
-        public string Name { get; set; }
+        [StringLength(100)]
+        public string Name { get; set; } // se agrego la propiedad required
 
         [StringLength(500)]
-        public string Description { get; set; }
+        public string Description { get; set; } //se agrego la propiedad required
 
-        [Required]
         public decimal Price { get; set; }
 
-        [Required]
         public ServiceType Type { get; set; } // Tipo de servicio: transporte, logística, otro
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;

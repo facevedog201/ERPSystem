@@ -3,6 +3,11 @@
     ViewData["Title"] = "Reporte de Pagos";
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/print.css" />
+}
+
+
 <h2>@ViewData["Title"]</h2>
 
 <form method="get" class="row g-2 mb-3">
@@ -15,8 +20,8 @@
         <input type="date" name="to" value="@((ViewBag.To as DateTime?)?.ToString("yyyy-MM-dd"))" class="form-control" />
     </div>
     <div class="col-md-3 d-flex align-items-end">
-        <button class="btn btn-primary me-2">Filtrar</button>
-        <a href="?export=excel" class="btn btn-success">Exportar Excel</a>
+        <button class="btn btn-primary me-2"><i class="bi bi-funnel-fill"></i>Filtrar</button>
+        <a href="?export=excel" class="btn btn-success"><i class="bi bi-file-earmark-excel-fill"></i>Exportar Excel</a>
     </div>
 </form>
 
@@ -45,5 +50,15 @@
         }
     </tbody>
 </table>
-@await Html.PartialAsync("_BackToIndexButton", "Index")
 
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Reporte de Pagos</h2>
+    <div>
+        <button class="btn btn-outline-primary me-2" onclick="window.print()">
+            <i class="bi bi-printer"></i> Imprimir
+        </button>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left-circle"></i> Volver
+        </a>
+    </div>
+</div>

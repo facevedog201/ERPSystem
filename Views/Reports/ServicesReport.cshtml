@@ -2,12 +2,21 @@
     ViewData["Title"] = "Servicios";
     var data = ViewBag.Data as IEnumerable<dynamic> ?? new List<dynamic>();
 }
+@section Styles {
+    <link rel="stylesheet" href="~/css/print.css" />
+}
 
-<h2>Servicios Más Solicitados</h2>
+<!-- Encabezado visible solo en impresión -->
+<div class="print-header">
+    <img src="~/images/logo.png" alt="Logo" style="height:40px;" />
+    <div>ERPSystem - Reporte de Servicios mas Solicitados</div>
+</div>
+
+<h2 class="no-print">Servicios mas Solicitados</h2>
 
 <form method="get" class="row g-2 mb-3">
-    <div class="col-md-3"><input type="date" name="from" class="form-control" value="@((ViewBag.From as DateTime?)?.ToString("yyyy-MM-dd"))" /></div>
-    <div class="col-md-3"><input type="date" name="to" class="form-control" value="@((ViewBag.To as DateTime?)?.ToString("yyyy-MM-dd"))" /></div>
+    <div class="col-md-3 no-print"><input type="date" name="from" class="form-control" value="@((ViewBag.From as DateTime?)?.ToString("yyyy-MM-dd"))" /></div>
+    <div class="col-md-3 no-print"><input type="date" name="to" class="form-control" value="@((ViewBag.To as DateTime?)?.ToString("yyyy-MM-dd"))" /></div>
 </form>
 
 <canvas id="servicesChart" height="120"></canvas>
@@ -39,4 +48,16 @@
         });
     </script>
 }
-@await Html.PartialAsync("_BackToIndexButton", "Index")
+
+<!-- Botones de acción (no se imprimen) -->
+<div class="d-flex justify-content-between align-items-center mb-3 no-print">
+    <h2>Reporte de Clientes</h2>
+    <div>
+        <button class="btn btn-outline-primary me-2" onclick="window.print()">
+            <i class="bi bi-printer"></i> Imprimir
+        </button>
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left-circle"></i> Volver
+        </a>
+    </div>
+</div>

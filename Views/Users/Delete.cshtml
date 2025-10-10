@@ -3,8 +3,9 @@
 <h2>Eliminar Usuario</h2>
 <p>¿Seguro que quieres eliminar a <strong>@Model.Username</strong>?</p>
 
-<form asp-action="DeleteConfirmed" method="post">
+<form asp-action="Delete" method="post">
     <input type="hidden" asp-for="UserId" />
-    <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+    <p>¿Seguro que quieres dar de baja a <strong>@Model.Username</strong>?</p>
+    <button type="submit" class="btn btn-danger">Sí, dar de baja</button>
     <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
 </form>

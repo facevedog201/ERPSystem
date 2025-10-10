@@ -15,11 +15,9 @@ namespace ERPSystem.Models
         public int ServiceId { get; set; }
         public Service Service { get; set; }
 
-        [Required]
         public int Quantity { get; set; } = 1;
 
-        [Required]
-        public decimal Price { get; set; }
+         public decimal Price { get; set; }
 
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public decimal Total { get; set; }
