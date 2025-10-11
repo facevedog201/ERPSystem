@@ -1,5 +1,35 @@
 ﻿@model ERPSystem.Models.Invoice
 @{
+    ViewData["Title"] = "Anular Factura";
+}
+
+<h2>Anular Factura #@Model.InvoiceId</h2>
+
+<div class="alert alert-warning">
+    ¿Está seguro que desea <strong>anular</strong> esta factura?
+</div>
+
+<div>
+    <strong>Cliente:</strong> @Model.Client.Name <br />
+    <p><strong>Fecha:</strong> @(Model.InvoiceDate?.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture) ?? "01/01/0000")</p>
+    <p><strong>Total:</strong> @(Model.Total?.ToString("C") ?? "0.0")</p>
+    <strong>Estado actual:</strong> @Model.Status
+</div>
+
+<form asp-action="Cancel" method="post">
+    <input type="hidden" asp-for="InvoiceId" />
+    <button type="submit" class="btn btn-warning">Anular Factura</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>
+
+
+
+
+
+
+
+@* @model ERPSystem.Models.Invoice
+@{
     ViewData["Title"] = "Eliminar Factura";
 }
 
@@ -20,3 +50,4 @@
     <button type="submit" class="btn btn-danger">Eliminar</button>
     <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
 </form>
+ *@

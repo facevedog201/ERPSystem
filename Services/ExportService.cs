@@ -38,11 +38,11 @@ namespace ERPSystem.Services
             {
                 ws.Cell(row, 1).Value = inv.InvoiceId;
                 ws.Cell(row, 2).Value = inv.Client?.Name ?? "";
-                ws.Cell(row, 3).Value = inv.InvoiceDate.ToString("yyyy-MM-dd");
-                ws.Cell(row, 4).Value = Convert.ToDouble(inv.Total);
-                ws.Cell(row, 5).Value = Convert.ToDouble(inv.PaidAmount);
-                ws.Cell(row, 6).Value = Convert.ToDouble(inv.Total - inv.PaidAmount);
-                ws.Cell(row, 7).Value = inv.Status.ToString();
+                ws.Cell(row, 3).Value = inv.InvoiceDate?.ToString("yyyy-MM-dd") ?? "";
+                ws.Cell(row, 4).Value = Convert.ToDouble(inv.Total ?? 0);
+                ws.Cell(row, 5).Value = Convert.ToDouble(inv.PaidAmount ?? 0);
+                ws.Cell(row, 6).Value = Convert.ToDouble((inv.Total ?? 0) - (inv.PaidAmount ?? 0));
+                ws.Cell(row, 7).Value = inv.Status?.ToString() ?? "";
                 row++;
             }
 
@@ -153,11 +153,11 @@ namespace ERPSystem.Services
             {
                 table.AddCell(inv.InvoiceId.ToString());
                 table.AddCell(inv.Client?.Name ?? "");
-                table.AddCell(inv.InvoiceDate.ToString("yyyy-MM-dd"));
-                table.AddCell(inv.Total.ToString("C", CultureInfo.CurrentCulture));
-                table.AddCell(inv.PaidAmount.ToString("C", CultureInfo.CurrentCulture));
-                table.AddCell((inv.Total - inv.PaidAmount).ToString("C", CultureInfo.CurrentCulture));
-                table.AddCell(inv.Status.ToString());
+                table.AddCell(inv.InvoiceDate?.ToString("yyyy-MM-dd") ?? "");
+                table.AddCell((inv.Total ?? 0).ToString("C", CultureInfo.CurrentCulture));
+                table.AddCell((inv.PaidAmount ?? 0).ToString("C", CultureInfo.CurrentCulture));
+                table.AddCell(((inv.Total ?? 0) - (inv.PaidAmount ?? 0)).ToString("C", CultureInfo.CurrentCulture));
+                table.AddCell(inv.Status?.ToString() ?? "");
             }
 
             document.Add(table);

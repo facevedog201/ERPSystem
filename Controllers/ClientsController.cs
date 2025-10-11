@@ -27,7 +27,7 @@ namespace ERPSystem.Controllers
         public async Task<IActionResult> Index()
         {
             var clients = await _context.Clients
-                                        .Where(c => c.IsActive)
+                                        .Where(c => c.IsActive==true)
                                         .ToListAsync();
             return View(clients);
         }
@@ -36,7 +36,7 @@ namespace ERPSystem.Controllers
         public async Task<IActionResult> InactiveClients()
         {
             var inactiveClients = await _context.Clients
-                                                .Where(c => !c.IsActive)
+                                                .Where(c => !c.IsActive==false)
                                                 .ToListAsync();
             return View(inactiveClients);
         }
@@ -45,7 +45,7 @@ namespace ERPSystem.Controllers
         public async Task<IActionResult> Details(int id)
         {
             var client = await _context.Clients.FindAsync(id);
-            if (client == null || !client.IsActive) return NotFound();
+            if (client == null || !client.IsActive==false) return NotFound();
             return View(client);
         }
 
@@ -76,7 +76,7 @@ namespace ERPSystem.Controllers
         public async Task<IActionResult> Edit(int id)
         {
             var client = await _context.Clients.FindAsync(id);
-            if (client == null || !client.IsActive) return NotFound();
+            if (client == null || !client.IsActive == false) return NotFound();
             return View(client);
         }
 
@@ -87,7 +87,7 @@ namespace ERPSystem.Controllers
         public async Task<IActionResult> Edit(Client client)
         {
             var existingClient = await _context.Clients.FindAsync(client.ClientId);
-            if (existingClient == null || !existingClient.IsActive) return NotFound();
+            if (existingClient == null || !existingClient.IsActive == false) return NotFound();
 
             if (ModelState.IsValid)
             {
@@ -107,7 +107,7 @@ namespace ERPSystem.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var client = await _context.Clients.FindAsync(id);
-            if (client == null || !client.IsActive) return NotFound();
+            if (client == null || !client.IsActive == false) return NotFound();
             return View(client);
         }
 
@@ -118,7 +118,7 @@ namespace ERPSystem.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var client = await _context.Clients.FindAsync(id);
-            if (client == null || !client.IsActive) return NotFound();
+            if (client == null || !client.IsActive == false) return NotFound();
 
             client.IsActive = false; // soft delete
             await _context.SaveChangesAsync();
@@ -133,7 +133,7 @@ namespace ERPSystem.Controllers
         public async Task<IActionResult> Activate(int id)
         {
             var client = await _context.Clients.FindAsync(id);
-            if (client == null || client.IsActive) return NotFound();
+            if (client == null || client.IsActive==false) return NotFound();
 
             client.IsActive = true;
             await _context.SaveChangesAsync();

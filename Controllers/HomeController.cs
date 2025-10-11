@@ -21,10 +21,10 @@ namespace ERPSystem.Controllers
         public IActionResult Index()
         {
             // Datos dinámicos para cada módulo
-            ViewBag.ActiveUsers = _context.Users.Count(u => u.IsActive);
-            ViewBag.ActiveClients = _context.Clients.Count(c => c.IsActive);
-            ViewBag.ActiveServices = _context.Services.Count(s => s.IsActive);
-            ViewBag.ActiveProviders = _context.Providers.Count(p => p.IsActive);
+            ViewBag.ActiveUsers = _context.Users.Count(u => u.IsActive == true);
+            ViewBag.ActiveClients = _context.Clients.Count(c => c.IsActive == true);
+            ViewBag.ActiveServices = _context.Services.Count(s => s.IsActive == true);
+            ViewBag.ActiveProviders = _context.Providers.Count(p => p.IsActive == true);
 
             return View();
         }

@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using ERPSystem.Models;
+﻿using ERPSystem.Models;
+using ERPSystem.ViewModels;
+using Microsoft.EntityFrameworkCore;
 
 namespace ERPSystem.Data
 {
@@ -18,6 +19,17 @@ namespace ERPSystem.Data
         public DbSet<ServiceProvider> ServiceProviders { get; set; } // Opcional
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<FacturaViewModel> vw_FacturaCompleta { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Configuración de la vista keyless
+            modelBuilder.Entity<FacturaViewModel>()
+                .HasNoKey()
+                .ToView("vw_FacturaCompleta"); // nombre exacto de la vista en SQL Server
+        }
 
     }
 }

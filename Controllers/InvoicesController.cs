@@ -5,6 +5,11 @@ using ERPSystem.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Reporting.NETCore;
+using ERPSystem.ViewModels;
+using System.Data;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+
 
 namespace ERPSystem.Controllers
 {
@@ -21,14 +26,17 @@ namespace ERPSystem.Controllers
         }
 
         // LISTAR FACTURAS
-        public IActionResult Index(string search)
+        public IActionResult Index(string search, string estado)
         {
+            if (User.IsInRole("Recepcion") || User.IsInRole("Vendedor") || User.IsInRole("Asistente"))
+                return RedirectToAction("Create");
+
             ViewBag.Search = search;
+            ViewBag.SelectedEstado = estado ?? "All";
 
             var invoices = _context.Invoices
                 .Include(i => i.Client)
-                .Include(i => i.InvoiceDetails)
-                    .ThenInclude(d => d.Service)
+                .Include(i => i.InvoiceDetails).ThenInclude(d => d.Service)
                 .Include(i => i.Payments)
                 .AsQueryable();
 
@@ -39,30 +47,57 @@ namespace ERPSystem.Controllers
                     i.Client.Name.Contains(search));
             }
 
+            if (!string.IsNullOrEmpty(estado) && estado != "All")
+            {
+                if (Enum.TryParse<InvoiceStatus>(estado, out var estadoEnum))
+                    invoices = invoices.Where(i => i.Status == (int)estadoEnum);
+            }
+
             return View(invoices.ToList());
         }
-
-
-        // DETALLES
         public IActionResult Details(int id)
         {
             var invoice = _context.Invoices
                 .Include(i => i.Client)
-                .Include(i => i.InvoiceDetails)
-                    .ThenInclude(d => d.Service)
+                .Include(i => i.InvoiceDetails).ThenInclude(d => d.Service)
                 .Include(i => i.Payments)
                 .FirstOrDefault(i => i.InvoiceId == id);
 
-            if (invoice == null) return NotFound();
+            if (invoice == null)
+                return NotFound();
 
-            invoice.UpdateStatus();
-            _context.SaveChanges();
-
-            return View(invoice);
+            return View(invoice); // ✅ devolvemos un objeto Invoice
         }
 
-        // CREAR (GET)
-        [RoleAuthorize("Admin", "Contador","Recepcion")]
+
+        //// DETALLES
+        //public async Task<IActionResult> Details(int id)
+        //{
+        //    var datos = await _context.vw_FacturaCompleta
+        //        .Where(v => v.InvoiceId == id)
+        //        .ToListAsync();
+
+        //    if (datos == null || !datos.Any())
+        //        return NotFound();
+
+        //    return View("Details", datos);
+        //}
+
+        public async Task<IActionResult> Print(int id)
+        {
+            var datos = await _context.vw_FacturaCompleta
+                .Where(v => v.InvoiceId == id)
+                .ToListAsync();
+
+            if (datos == null || !datos.Any())
+                return NotFound();
+
+            // Generar RDLC / PDF a partir del dataset
+            return View("FacturaReport", datos);
+        }
+
+        // CREAR
+        [RoleAuthorize("Admin", "Contador", "Recepcion", "Vendedor", "Asistente")]
         public IActionResult Create()
         {
             ViewBag.Clients = _context.Clients.ToList();
@@ -70,37 +105,72 @@ namespace ERPSystem.Controllers
             return View(new Invoice { InvoiceDetails = new List<InvoiceDetail>() });
         }
 
-        // CREAR (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RoleAuthorize("Admin", "Contador","Recepcion")]
-        public IActionResult Create(int clientId, int[] selectedServices, int[] quantities)
+        public async Task<IActionResult> Create(Invoice invoice, List<InvoiceDetail> details)
         {
-            if (clientId == 0) ModelState.AddModelError("", "Debe seleccionar un cliente.");
-            if (selectedServices == null || selectedServices.Length == 0) ModelState.AddModelError("", "Debe seleccionar al menos un servicio.");
-
             if (!ModelState.IsValid)
+                return View(invoice);
+
+            // Guardar factura y detalles
+            invoice.CreatedAt = DateTime.Now;
+            invoice.InvoiceDate = DateTime.Now;
+
+            _context.Add(invoice);
+            await _context.SaveChangesAsync();
+
+            foreach (var detail in details)
             {
-                ViewBag.Clients = _context.Clients.ToList();
-                ViewBag.Services = _context.Services.ToList();
-                return View();
+                detail.InvoiceId = invoice.InvoiceId;
+                _context.InvoiceDetails.Add(detail);
             }
 
-            var invoice = new Invoice
-            {
-                ClientId = clientId,
-                InvoiceDate = DateTime.Now,
-                InvoiceDetails = new List<InvoiceDetail>()
-            };
+            await _context.SaveChangesAsync();
 
-            for (int i = 0; i < selectedServices.Length; i++)
+            // Actualizar totales y convertir a letras
+            invoice.SubTotal = details.Sum(d => d.Quantity * d.Price);
+            invoice.TaxAmount = (invoice.SubTotal * 0.15M); // Ejemplo de IVA
+            invoice.Total = invoice.SubTotal + invoice.TaxAmount;
+            invoice.AmountInWords = invoice.NumberToWords(invoice.Total ?? 0m); //El operador ?? asegura que no se pase un valor nulo y si es nulo se pasa 0m que significa 0 decimal
+            await _context.SaveChangesAsync();
+
+            // Ahora, en lugar de ir a Details → generar reporte o imprimir
+            return RedirectToAction("Print", new { id = invoice.InvoiceId });
+        }
+
+        // EDITAR
+        [RoleAuthorize("Admin", "Contador")]
+        public IActionResult Edit(int id)
+        {
+            var invoice = _context.Invoices
+                .Include(i => i.InvoiceDetails)
+                .FirstOrDefault(i => i.InvoiceId == id);
+            if (invoice == null) return NotFound();
+
+            ViewBag.Clients = _context.Clients.ToList();
+            ViewBag.Services = _context.Services.ToList();
+            return View(invoice);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RoleAuthorize("Admin", "Contador")]
+        public IActionResult Edit(int invoiceId, int clientId, int[] serviceIds, int[] quantities)
+        {
+            var invoice = _context.Invoices
+                .Include(i => i.InvoiceDetails)
+                .FirstOrDefault(i => i.InvoiceId == invoiceId);
+            if (invoice == null) return NotFound();
+
+            invoice.ClientId = clientId;
+            invoice.InvoiceDetails.Clear();
+
+            for (int i = 0; i < serviceIds.Length; i++)
             {
-                int serviceId = selectedServices[i];
                 int qty = quantities[i];
-
                 if (qty <= 0) continue;
 
-                var service = _context.Services.Find(serviceId);
+                var service = _context.Services.Find(serviceIds[i]);
                 if (service != null)
                 {
                     invoice.InvoiceDetails.Add(new InvoiceDetail
@@ -113,55 +183,50 @@ namespace ERPSystem.Controllers
             }
 
             invoice.Total = invoice.InvoiceDetails.Sum(d => d.Quantity * d.Price);
-            _context.Invoices.Add(invoice);
+            invoice.UpdateStatus();
             _context.SaveChanges();
 
-            _auditService.Log("Create", "Invoice", invoice.InvoiceId,
-                $"Se creó la factura #{invoice.InvoiceId} para el cliente {invoice.ClientId}");
+            _auditService.Log("Edit", "Invoice", invoice.InvoiceId,
+                $"Se editó la factura #{invoice.InvoiceId}");
 
             return RedirectToAction("Index");
         }
 
-        // ELIMINAR (GET)
+        // ANULAR FACTURA
         [RoleAuthorize("Admin", "Contador")]
-        public IActionResult Delete(int id)
+        public IActionResult Cancel(int id)
+        {
+            var invoice = _context.Invoices.FirstOrDefault(i => i.InvoiceId == id);
+            if (invoice == null) return NotFound();
+
+            invoice.Status = (int?)InvoiceStatus.Cancelled;
+            _context.SaveChanges();
+
+            _auditService.Log("Cancel", "Invoice", invoice.InvoiceId,
+                $"Se anuló la factura #{invoice.InvoiceId}");
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public IActionResult AddPayment(int id)
         {
             var invoice = _context.Invoices
                 .Include(i => i.Client)
-                .FirstOrDefault(i => i.InvoiceId == id);
-
-            if (invoice == null) return NotFound();
-            return View(invoice);
-        }
-
-        // ELIMINAR (POST)
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        [RoleAuthorize("Admin", "Contador")]
-        public IActionResult DeleteConfirmed(int id)
-        {
-            var invoice = _context.Invoices
-                .Include(i => i.InvoiceDetails)
+                .Include(i => i.InvoiceDetails).ThenInclude(d => d.Service)
                 .Include(i => i.Payments)
                 .FirstOrDefault(i => i.InvoiceId == id);
 
-            if (invoice != null)
-            {
-                _context.InvoiceDetails.RemoveRange(invoice.InvoiceDetails);
-                _context.Payments.RemoveRange(invoice.Payments);
-                _context.Invoices.Remove(invoice);
-                _context.SaveChanges();
+            if (invoice == null)
+                return NotFound();
 
-                _auditService.Log("Delete", "Invoice", invoice.InvoiceId,
-                    $"Se eliminó la factura #{invoice.InvoiceId} para el cliente {invoice.ClientId}");
-            }
-
-            return RedirectToAction(nameof(Index));
+            return View(invoice); // 👈 Esto carga tu vista AddPayment.cshtml
         }
 
         // AGREGAR PAGO
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RoleAuthorize("Admin", "Contador", "Recepcion", "Vendedor", "Asistente")]
         public IActionResult AddPayment(int invoiceId, decimal amount, string notes)
         {
             var invoice = _context.Invoices
@@ -172,9 +237,9 @@ namespace ERPSystem.Controllers
 
             invoice.UpdateStatus();
 
-            if (invoice.Status == InvoiceStatus.Paid)
+            if ((InvoiceStatus?)invoice.Status == InvoiceStatus.Paid || (InvoiceStatus?)invoice.Status == InvoiceStatus.Cancelled)
             {
-                TempData["Error"] = "Factura ya pagada, no se pueden registrar más pagos.";
+                TempData["Error"] = "Factura ya pagada o anulada, no se pueden registrar más pagos.";
                 return RedirectToAction("Details", new { id = invoiceId });
             }
 
@@ -201,10 +266,9 @@ namespace ERPSystem.Controllers
             _context.Payments.Add(payment);
             invoice.PaidAmount += amount;
             invoice.UpdateStatus();
-
             _context.SaveChanges();
-            TempData["Success"] = $"Pago de {amount:C} registrado correctamente.";
 
+            TempData["Success"] = $"Pago de {amount:C} registrado correctamente.";
             return RedirectToAction("Details", new { id = invoiceId });
         }
     }

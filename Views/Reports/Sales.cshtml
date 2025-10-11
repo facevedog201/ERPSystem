@@ -38,9 +38,9 @@
             <tr>
                 <td>@inv.InvoiceId</td>
                 <td>@inv.Client?.Name</td>
-                <td>@inv.InvoiceDate.ToString("dd/MM/yyyy")</td>
-                <td>@inv.Total.ToString("C")</td>
-                <td>@inv.PaidAmount.ToString("C")</td>
+                <td>@inv.InvoiceDate?.ToString("dd/MM/yyyy")</td>
+                <td>@inv.Total?.ToString("C")</td>
+                <td>@inv.PaidAmount?.ToString("C")</td>
                 <td>@inv.Status</td>
             </tr>
         }

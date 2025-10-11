@@ -5,27 +5,27 @@
     var services = ViewBag.Services as List<ERPSystem.Models.Service>;
 }
 
-<h2>Editar Factura</h2>
+<h2>Editar Factura #@Model.InvoiceId</h2>
 
-<form asp-action="Edit" method="post">
-    <input type="hidden" asp-for="InvoiceId" />
+@if (Model.Status == (int?)ERPSystem.Models.InvoiceStatus.Cancelled)
+{
+    <div class="alert alert-danger">
+        Esta factura ha sido anulada y no se puede editar.
+    </div>
+}
+else
+{
+    <form asp-action="Edit" method="post">
+        <input type="hidden" name="invoiceId" value="@Model.InvoiceId" />
 
-    <div class="mb-3">
-        <label>Cliente</label>
-
-        @Html.DropDownListFor(
-                m => m.ClientId,                // propiedad del modelo que guarda el ClientId
-                new SelectList(clients, "ClientId", "Name", Model.ClientId), // lista de clientes
-                "Seleccione un cliente",        // opción por defecto (placeholder)
-                new { @class = "form-select" }  // atributos HTML (Bootstrap)
-         )
-
-        @* <select asp-for="ClientId" class="form-select">
-            @foreach (var c in clients)
-            {
-                <option value="@c.ClientId" @(c.ClientId == Model.ClientId ? "selected" : "")>@c.Name</option>
-            }
-        </select> *@
+        <div class="mb-3">
+            <label>Cliente</label>
+            @Html.DropDownListFor(
+            m => m.ClientId,
+                new SelectList(clients, "ClientId", "Name", Model.ClientId),
+                "Seleccione un cliente",
+                new { @class = "form-select" }
+                )
     </div>
 
     <h4>Servicios</h4>
@@ -39,21 +39,23 @@
         </thead>
         <tbody>
             @for (int i = 0; i < services.Count; i++)
-            {
-                var detail = Model.InvoiceDetails.FirstOrDefault(d => d.ServiceId == services[i].ServiceId);
-                <tr>
-                    <td>
-                        <input type="hidden" name="serviceIds" value="@services[i].ServiceId" />
-                        @services[i].Name
-                    </td>
-                    <td>@services[i].Price.ToString("C")</td>
-                    <td>
-                        <input type="number" name="quantities" value="@(detail?.Quantity ?? 0)" class="form-control" min="0" />
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                {
+                    var detail = Model.InvoiceDetails.FirstOrDefault(d => d.ServiceId == services[i].ServiceId);
+                    <tr>
+                        <td>
+                            <input type="hidden" name="serviceIds" value="@services[i].ServiceId" />
+                            @services[i].Name
+                        </td>
+                        <td>@services[i].Price.ToString("C")</td>
+                        <td>
+                            <input type="number" name="quantities" value="@(detail?.Quantity ?? 0)" class="form-control" min="0" @(Model.Status == (int?)ERPSystem.Models.InvoiceStatus.Cancelled ? "disabled" : "") />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
 
-    <button type="submit" class="btn btn-primary">Actualizar Factura</button>
-</form>
+        <button type="submit" class="btn btn-primary" @(Model.Status == (int?)ERPSystem.Models.InvoiceStatus.Cancelled ? "disabled" : "")>Actualizar Factura</button>
+        <a asp-action="Index" class="btn btn-secondary">Volver</a>
+    </form>
+}

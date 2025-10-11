@@ -1,37 +1,121 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace ERPSystem.Models
 {
     public class Invoice
     {
         public int InvoiceId { get; set; }
-        public int ClientId { get; set; }
-        public Client Client { get; set; }
-        public DateTime InvoiceDate { get; set; } = DateTime.Now;
-        public decimal Total { get; set; }
-        public decimal PaidAmount { get; set; } = 0;
-        public InvoiceStatus Status { get; set; } = InvoiceStatus.Pending;
 
+        public int ClientId { get; set; }    // clave foránea (columna en la tabla)
+        public Client Client { get; set; }   // navegación al objeto Client
+
+
+        public DateTime? InvoiceDate { get; set; } = DateTime.Now;
+        public DateTime? CreatedAt { get; set; } = DateTime.Now;
+
+        public decimal? PaidAmount { get; set; } = 0;
+        public int? Status { get; set; } = (int)InvoiceStatus.Pending;
+        public bool? IsActive { get; set; } = true;
+        public int? InvoiceNumber { get; set; }
+        public int? Type { get; set; }
+        public decimal? ExchangeRate { get; set; }
+        public string? Reference { get; set; }
+        public decimal? CIF { get; set; }
+        public string? Shipping { get; set; }
+        public string? AmountInWords { get; set; }
+        public decimal? Total { get; set; }
+        public decimal? SubTotal { get; set; }
+        public decimal? TaxAmount { get; set; }
+        public string? Observations { get; set; }
+
+        // Relaciones
         public List<InvoiceDetail> InvoiceDetails { get; set; } = new();
         public List<Payment> Payments { get; set; } = new();
 
         public void UpdateStatus()
         {
-            if (PaidAmount <= 0)
-                Status = InvoiceStatus.Pending;
+            if (IsActive == false)
+            {
+                Status = (int)InvoiceStatus.Cancelled;
+            }
+            else if (PaidAmount <= 0)
+                Status = (int)InvoiceStatus.Pending;
             else if (PaidAmount < Total)
-                Status = InvoiceStatus.Partial;
+                Status = (int)InvoiceStatus.Partial;
             else
-                Status = InvoiceStatus.Paid;
+                Status = (int)InvoiceStatus.Paid;
+        }
+        public string NumberToWords(decimal number)
+        {
+            if (number == 0)
+                return "cero con cero";
+
+            if (number < 0)
+                return "menos " + NumberToWords(Math.Abs(number));
+
+            long integerPart = (long)Math.Floor(number);
+            int decimalPart = (int)Math.Round((number - integerPart) * 100);
+
+            string[] units = { "", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez", "once", "doce", "trece", "catorce", "quince", "dieciséis", "diecisiete", "dieciocho", "diecinueve" };
+            string[] tens = { "", "", "veinte", "treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa" };
+            string[] hundreds = { "", "cien", "doscientos", "trescientos", "cuatrocientos", "quinientos", "seiscientos", "setecientos", "ochocientos", "novecientos" };
+
+            Func<long, string> toWords = null;
+            toWords = n =>
+            {
+                if (n == 0)
+                    return "cero";
+                if (n < 0)
+                    return "menos " + toWords(Math.Abs(n));
+                if (n < 20)
+                    return units[n];
+                if (n < 100)
+                {
+                    if (n % 10 == 0)
+                        return tens[n / 10];
+                    if (n < 30)
+                        return "veinti" + units[n % 10];
+                    return tens[n / 10] + " y " + units[n % 10];
+                }
+                if (n < 1000)
+                {
+                    if (n == 100)
+                        return "cien";
+                    if (n % 100 == 0)
+                        return hundreds[n / 100];
+                    return hundreds[n / 100] + " " + toWords(n % 100);
+                }
+                if (n < 1000000)
+                {
+                    if (n / 1000 == 1)
+                        return "mil" + (n % 1000 > 0 ? " " + toWords(n % 1000) : "");
+                    return toWords(n / 1000) + " mil" + (n % 1000 > 0 ? " " + toWords(n % 1000) : "");
+                }
+                if (n < 2000000)
+                    return "un millón" + (n % 1000000 > 0 ? " " + toWords(n % 1000000) : "");
+                if (n < 1000000000000)
+                    return toWords(n / 1000000) + " millones" + (n % 1000000 > 0 ? " " + toWords(n % 1000000) : "");
+                return n.ToString();
+            };
+
+            string result = toWords(integerPart) + " con " + (decimalPart > 0 ? toWords(decimalPart) : "cero");
+            return result;
         }
     }
 
-    public enum InvoiceStatus
+        public enum InvoiceStatus
     {
         Pending,
         Partial,
-        Paid
+        Paid,
+        Cancelled,
+        Anulada,
+        Pagada,
+        Parcial,
+        Pendiente,
+        Overdue,
+        NoStatus
     }
 }

@@ -49,7 +49,8 @@ namespace ERPSystem.Controllers
 
             // Sales by month (last 12 months window)
             var salesByMonth = invoices
-                .GroupBy(i => new { Year = i.InvoiceDate.Year, Month = i.InvoiceDate.Month })
+                .Where(i => i.InvoiceDate.HasValue)
+                .GroupBy(i => new { Year = i.InvoiceDate.Value.Year, Month = i.InvoiceDate.Value.Month })
                 .Select(g => new { Year = g.Key.Year, Month = g.Key.Month, Total = g.Sum(x => x.Total) })
                 .OrderBy(x => x.Year).ThenBy(x => x.Month)
                 .ToList();
@@ -140,7 +141,7 @@ namespace ERPSystem.Controllers
 
             if (!string.IsNullOrEmpty(export) && export == "excel")
             {
-                var rows = data.Select(d => (d.Client, d.Count, d.Total));
+                var rows = data.Select(d => (d.Client, d.Count, d.Total ?? 0m)); // se usa el operador ?? para manejar posibles nulos si es nulo se asigna 0m que significa 0 decimal
                 var bytes = _export.ExportClientsToExcel(rows, "Clientes");
                 return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"clientes_{start:yyyyMMdd}_{end:yyyyMMdd}.xlsx");
             }

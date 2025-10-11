@@ -1,4 +1,5 @@
 ﻿@model ERPSystem.Models.Invoice
+
 @{
     ViewData["Title"] = "Detalles Factura";
 }
@@ -7,10 +8,18 @@
 
 <div class="mb-3">
     <strong>Cliente:</strong> @Model.Client.Name <br />
-    <strong>Fecha:</strong> @Model.InvoiceDate.ToString("dd/MM/yyyy") <br />
-    <strong>Total:</strong> @Model.Total.ToString("C") <br />
-    <strong>Pagado:</strong> @Model.PaidAmount.ToString("C") <br />
-    <strong>Estado:</strong> <span class="badge @(Model.Status == ERPSystem.Models.InvoiceStatus.Paid ? "bg-success" : Model.Status == ERPSystem.Models.InvoiceStatus.Partial ? "bg-warning" : "bg-secondary")">@Model.Status</span>
+    <p><strong>Fecha:</strong> @(Model.InvoiceDate?.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture) ?? "01/01/0000")</p>
+    <p><strong>Total:</strong> @(Model.Total?.ToString("C") ?? "0.0")</p>
+    <p><strong>Pagado:</strong> @(Model.PaidAmount?.ToString("C") ?? "0.0")</p>
+    <strong>Estado:</strong>
+    <span class="badge @(
+          Model.Status.HasValue ?
+          (Model.Status.Value == (int)ERPSystem.Models.InvoiceStatus.Paid ? "bg-success" :
+           Model.Status.Value == (int)ERPSystem.Models.InvoiceStatus.Partial ? "bg-warning" :
+           Model.Status.Value == (int)ERPSystem.Models.InvoiceStatus.Cancelled ? "bg-danger" : "bg-secondary")
+          : "bg-secondary")">
+        @(Model.Status.HasValue ? ((ERPSystem.Models.InvoiceStatus)Model.Status.Value).ToString() : "9")
+    </span>
 </div>
 
 <h4 class="mt-3">Servicios</h4>
@@ -37,27 +46,33 @@
 </table>
 
 <h4 class="mt-3">Pagos</h4>
-<table class="table table-bordered table-striped">
-    <thead class="table-dark">
-        <tr>
-            <th>Fecha</th>
-            <th>Monto</th>
-            <th>Notas</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var p in Model.Payments)
-        {
+@if (Model.Payments.Any())
+{
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
             <tr>
-                <td>@p.PaymentDate.ToString("dd/MM/yyyy")</td>
-                <td>@p.Amount.ToString("C")</td>
-                <td>@p.Notes</td>
+                <th>Fecha</th>
+                <th>Monto</th>
+                <th>Notas</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var p in Model.Payments)
+            {
+                <tr>
+                    <td>@p.PaymentDate.ToString("dd/MM/yyyy")</td>
+                    <td>@p.Amount.ToString("C")</td>
+                    <td>@p.Notes</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No se han registrado pagos para esta factura.</p>
+}
 
-<!-- Mensajes de éxito o error -->
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success">@TempData["Success"]</div>
@@ -67,8 +82,9 @@
     <div class="alert alert-danger">@TempData["Error"]</div>
 }
 
-<!-- Formulario para registrar pago -->
-@if (Model.Status != ERPSystem.Models.InvoiceStatus.Paid)
+@if (Model.Status.HasValue
+    && Model.Status.Value != (int?)ERPSystem.Models.InvoiceStatus.Paid
+    && Model.Status.Value != (int?)ERPSystem.Models.InvoiceStatus.Cancelled)
 {
     <h4 class="mt-3">Registrar Pago</h4>
     <form asp-action="AddPayment" asp-controller="Invoices" method="post">
@@ -84,6 +100,26 @@
         <button type="submit" class="btn btn-success">Registrar Pago</button>
     </form>
 }
+
+@if ((User.IsInRole("Recepcion") || User.IsInRole("Vendedor") || User.IsInRole("Asistente"))
+    && Model.Status != (int?)ERPSystem.Models.InvoiceStatus.Paid
+    && Model.Status != (int?)ERPSystem.Models.InvoiceStatus.Cancelled)
+{
+    <h4 class="mt-3">Registrar Pago</h4>
+    <form asp-action="AddPayment" method="post">
+        <input type="hidden" name="invoiceId" value="@Model.InvoiceId" />
+        <div class="mb-3">
+            <label>Monto a pagar</label>
+            <input type="number" name="amount" class="form-control" step="0.01" min="0.01" required />
+        </div>
+        <div class="mb-3">
+            <label>Notas</label>
+            <input type="text" name="notes" class="form-control" />
+        </div>
+        <button type="submit" class="btn btn-success">Registrar Pago</button>
+    </form>
+}
+
 
 <p class="mt-3">
     <a asp-action="Index" class="btn btn-secondary">Volver a Facturas</a>

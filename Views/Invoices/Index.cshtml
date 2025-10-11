@@ -5,13 +5,31 @@
 
 <h2>Facturas</h2>
 
-<form method="get" class="mb-3">
-    <div class="input-group">
-        @*@<input type="text" name="search" class="form-control" placeholder="Buscar por número de factura o cliente..." value="@Request.Query["search"]" />*@
-        <input type="text" name="search" class="form-control" placeholder="Buscar por número de factura o cliente..." value="@ViewBag.Search" />
-        <button type="submit" class="btn btn-primary">Buscar</button>
-    </div>
-</form>
+@if (User.IsInRole("Admin") || User.IsInRole("Contador"))
+{
+
+ <div class="mb-3">
+        <a asp-action="Create" class="btn btn-success">Crear Factura</a>
+ </div>
+
+<div class="mb-3 d-flex justify-content-between align-items-center">
+    <form method="get" class="d-flex">
+        <input type="text" name="search" class="form-control me-2" placeholder="Buscar por número de factura o cliente..." value="@ViewBag.Search" />
+        <select name="estado" class="form-select me-2">
+            <option value="All" selected="@(ViewBag.SelectedEstado == "All" ? "selected" : null)">Todos los estados</option>
+            <option value="Pending" selected="@(ViewBag.SelectedEstado == "Pending" ? "selected" : null)">Pendiente</option>
+            <option value="Partial" selected="@(ViewBag.SelectedEstado == "Partial" ? "selected" : null)">Parcial</option>
+            <option value="Paid" selected="@(ViewBag.SelectedEstado == "Paid" ? "selected" : null)">Pagada</option>
+            <option value="Cancelled" selected="@(ViewBag.SelectedEstado == "Cancelled" ? "selected" : null)">Anulada</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+    </form>
+
+        @if (User.IsInRole("Recepcion") || User.IsInRole("Vendedor") || User.IsInRole("Asistente"))
+    {
+        <a asp-action="Create" class="btn btn-success">Crear Factura</a>
+    }
+</div>
 
 <table class="table table-bordered table-striped">
     <thead>
@@ -31,18 +49,44 @@
             <tr>
                 <td>@invoice.InvoiceId</td>
                 <td>@invoice.Client.Name</td>
-                <td>@invoice.InvoiceDate.ToString("dd/MM/yyyy")</td>
-                <td>@invoice.Total.ToString("C")</td>
-                <td>@invoice.PaidAmount.ToString("C")</td>
-                <td>@invoice.Status</td>
+                <td>@invoice.InvoiceDate?.ToString("dd/MM/yyyy")</td>
+                <td>@invoice.Total?.ToString("C")</td>
+                <td>@invoice.PaidAmount?.ToString("C")</td>
+                <td>
+                        <span class="badge @(invoice.Status.HasValue
+                                                  ? (invoice.Status.Value == (int?)ERPSystem.Models.InvoiceStatus.Paid ? "bg-success"
+                                                      : invoice.Status.Value == (int?)ERPSystem.Models.InvoiceStatus.Partial ? "bg-warning"
+                                                      : invoice.Status.Value == (int?)ERPSystem.Models.InvoiceStatus.Cancelled ? "bg-danger"
+                                                      : "bg-secondary")
+                                                  : "bg-secondary")">
+                    @(invoice.Status.HasValue ? ((ERPSystem.Models.InvoiceStatus)invoice.Status.Value).ToString() : "9")
+                </span>
+
+                </td>
                 <td>
                     <a asp-action="Details" asp-route-id="@invoice.InvoiceId" class="btn btn-info btn-sm">Ver</a>
+
                     @if (User.IsInRole("Admin") || User.IsInRole("Contador"))
                     {
-                        <a asp-action="Delete" asp-route-id="@invoice.InvoiceId" class="btn btn-danger btn-sm">Eliminar</a>
+                        <a asp-action="Edit" asp-route-id="@invoice.InvoiceId" class="btn btn-primary btn-sm">Editar</a>
+                        <a asp-action="Cancel" asp-route-id="@invoice.InvoiceId" class="btn btn-danger btn-sm">Anular</a>
+                    }
+
+                    @if ((User.IsInRole("Recepcion") || User.IsInRole("Vendedor") || User.IsInRole("Asistente") 
+                        || User.IsInRole("Admin") || User.IsInRole("Contador")) 
+                        && invoice.Status != (int?)ERPSystem.Models.InvoiceStatus.Paid 
+                        && invoice.Status != (int?)ERPSystem.Models.InvoiceStatus.Cancelled)
+                    {
+                        <a asp-action="AddPayment" asp-route-id="@invoice.InvoiceId" class="btn btn-success btn-sm">Registrar Pago</a>
                     }
                 </td>
             </tr>
         }
     </tbody>
 </table>
+}
+else
+{
+    <p>No tienes permisos para ver la lista de facturas. Puedes crear una nueva:</p>
+    <a asp-action="Create" class="btn btn-success">Crear Factura</a>
+}

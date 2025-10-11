@@ -116,3 +116,130 @@
         });
     </script>
 }
+
+
+
+
+
+
+
+
+@* @model ERPSystem.Models.Invoice
+@{
+    ViewData["Title"] = "Crear Factura";
+}
+
+<h2 class="mb-4">Crear Factura</h2>
+
+<form asp-action="Create" method="post">
+    <div class="mb-3">
+        <label asp-for="ClientId" class="form-label fw-bold">Cliente</label>
+        @Html.DropDownListFor(
+        m => m.ClientId,
+                new SelectList(ViewBag.Clients, "ClientId", "Name"),
+                "-- Seleccione un cliente --",
+                new { @class = "form-select" }
+                )
+        <span asp-validation-for="ClientId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-bold">Agregar Servicio</label>
+        <div class="input-group mb-2">
+            <select id="serviceDropdown" class="form-select">
+                <option value="">-- Selecciona un servicio --</option>
+                @foreach (var s in ViewBag.Services)
+                {
+                    <option value="@s.ServiceId" data-price="@s.Price">@s.Name</option>
+                }
+            </select>
+            <button type="button" class="btn btn-primary" id="addServiceBtn">Agregar</button>
+        </div>
+    </div>
+
+    <div class="table-responsive mb-3">
+        <table class="table table-striped table-bordered" id="invoiceServicesTable">
+            <thead class="table-dark">
+                <tr>
+                    <th>Servicio</th>
+                    <th>Precio</th>
+                    <th>Cantidad</th>
+                    <th>Total</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Filas se agregan dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+        <span class="fw-bold fs-5">Total: <span id="invoiceTotal">0.00</span></span>
+        <button type="submit" class="btn btn-success btn-lg">Guardar Factura</button>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        const servicesTable = document.getElementById('invoiceServicesTable').querySelector('tbody');
+        const addBtn = document.getElementById('addServiceBtn');
+        const dropdown = document.getElementById('serviceDropdown');
+        const invoiceTotal = document.getElementById('invoiceTotal');
+
+        function updateTotal() {
+            let total = 0;
+            servicesTable.querySelectorAll('tr').forEach(tr => {
+                const price = parseFloat(tr.cells[1].textContent);
+                const qty = parseInt(tr.querySelector('input[name="quantities"]').value) || 0;
+                total += price * qty;
+            });
+            invoiceTotal.textContent = total.toFixed(2);
+        }
+
+        addBtn.addEventListener('click', () => {
+            const selectedOption = dropdown.options[dropdown.selectedIndex];
+            if (!selectedOption.value) return;
+
+            const serviceId = selectedOption.value;
+            const serviceName = selectedOption.text;
+            const price = parseFloat(selectedOption.dataset.price);
+
+            // Revisar si ya fue agregado
+            if (document.getElementById('row-' + serviceId)) return;
+
+            const row = document.createElement('tr');
+            row.id = 'row-' + serviceId;
+
+            row.innerHTML = `
+                <td>${serviceName}<input type="hidden" name="selectedServices" value="${serviceId}" /></td>
+                <td>${price.toFixed(2)}</td>
+                <td><input type="number" name="quantities" value="1" min="1" class="form-control" /></td>
+                <td class="totalCell">${price.toFixed(2)}</td>
+                <td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow('${serviceId}')">Eliminar</button></td>
+            `;
+
+            servicesTable.appendChild(row);
+            updateTotal();
+        });
+
+        function removeRow(id) {
+            const row = document.getElementById('row-' + id);
+            if (row) row.remove();
+            updateTotal();
+        }
+
+        servicesTable.addEventListener('input', function (e) {
+            if (e.target.name === 'quantities') {
+                const tr = e.target.closest('tr');
+                let qty = parseInt(e.target.value) || 1;
+                if (qty < 1) qty = 1;
+                e.target.value = qty;
+                const price = parseFloat(tr.cells[1].textContent);
+                tr.querySelector('.totalCell').textContent = (price * qty).toFixed(2);
+                updateTotal();
+            }
+        });
+    </script>
+}
+ *@
