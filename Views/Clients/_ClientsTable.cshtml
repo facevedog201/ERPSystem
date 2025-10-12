@@ -1,0 +1,71 @@
+﻿@model IEnumerable<ERPSystem.Models.Client>
+@using ERPSystem.Helpers
+
+<div class="container mt-4">
+    <h2 class="mb-4">Listado de Clientes</h2>
+
+    <div class="row">
+        @foreach (var client in Model)
+        {
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm @(client.IsActive ?? false ? "border-primary" : "border-secondary position-relative")">
+
+                    @* Overlay gris para clientes inactivos *@
+                    @if (!(client.IsActive ?? false))
+                    {
+                        <div class="position-absolute w-100 h-100 top-0 start-0" style="background-color: rgba(220,220,220,0.5); z-index:1; border-radius: .25rem;"></div>
+                    }
+
+                    <div class="card-header d-flex justify-content-between align-items-center bg-light" style="z-index:2; position:relative;">
+                        <h5 class="mb-0">@client.Name</h5>
+                        <span class="badge @(client.IsActive ?? false ? "bg-success" : "bg-danger")">
+                            @(client.IsActive ?? false ? "Activo" : "Inactivo")
+                        </span>
+                    </div>
+
+                    <div class="card-body" style="z-index:2; position:relative;">
+                        <p><i class="bi bi-envelope me-2"></i><strong>Correo:</strong> @client.Email</p>
+                        <p><i class="bi bi-telephone me-2"></i><strong>Teléfono:</strong> @client.Phone</p>
+                        <p><i class="bi bi-geo-alt me-2"></i><strong>Dirección:</strong> @client.Address</p>
+                        @if (!string.IsNullOrEmpty(client.RUC))
+                        {
+                            <p><i class="bi bi-card-text me-2"></i><strong>RUC / NIT:</strong> @client.RUC</p>
+                        }
+                        <p><i class="bi bi-calendar3 me-2"></i><strong>Creado:</strong> @client.CreatedAt.ToString("dd/MM/yyyy")</p>
+                    </div>
+
+                    <div class="card-footer d-flex flex-wrap gap-2 justify-content-end" style="z-index:2; position:relative;">
+                        <a class="btn btn-sm btn-info" asp-action="Details" asp-route-id="@client.ClientId">
+                            <i class="bi bi-eye"></i> Detalles
+                        </a>
+
+                        @if (client.IsActive ?? false)
+                        {
+                            @if (User.IsInRole(UserRole.Admin.ToString()) || User.IsInRole(UserRole.Contador.ToString()))
+                            {
+                                <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-id="@client.ClientId">
+                                    <i class="bi bi-pencil-square"></i> Editar
+                                </a>
+                                @if (User.IsInRole(UserRole.Admin.ToString()))
+                                {
+                                    <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@client.ClientId">
+                                        <i class="bi bi-trash"></i> Eliminar
+                                    </a>
+                                }
+                            }
+                        }
+                        else
+                        {
+                            @if (User.IsInRole(UserRole.Admin.ToString()))
+                            {
+                                <a class="btn btn-sm btn-success" asp-action="Activate" asp-route-id="@client.ClientId">
+                                    <i class="bi bi-arrow-repeat"></i> Reactivar
+                                </a>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
