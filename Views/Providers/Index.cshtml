@@ -1,17 +1,126 @@
-﻿@model IEnumerable<ERPSystem.Models.Provider>
+﻿@using ERPSystem.Models
+@using ERPSystem.ViewModels
+@model IEnumerable<ProviderInvoice>
+
 @{
-    ViewData["Title"] = "Proveedores";
+    ViewData["Title"] = "Dashboard de Proveedores";
+
+    // Filtros
+    var from = ViewBag.From as DateTime? ?? DateTime.Now.AddMonths(-11);
+    var to = ViewBag.To as DateTime? ?? DateTime.Now;
+    var nameFilter = ViewBag.Name as string ?? "";
+
+    var invoices = ViewBag.ProviderInvoices as List<ProviderInvoice> ?? new List<ProviderInvoice>();
+
+    // KPIs
+    var totalFacturado = invoices.Sum(i => i.Amount);
+    var totalCobrado = invoices.Sum(i => i.PaidAmount);
+    var totalPendiente = totalFacturado - totalCobrado;
+    var countInvoices = invoices.Count;
+
+    // KPI cards using explicit ViewModel
+    var cards = new List<KpiCardViewModel>
+    {
+        new KpiCardViewModel { Title = "Total facturado", Value = totalFacturado.ToString("C"), IconClass = "bi bi-currency-dollar", ExtraClass = "" },
+        new KpiCardViewModel { Title = "Total cobrado", Value = totalCobrado.ToString("C"), IconClass = "bi bi-wallet2", ExtraClass = "" },
+        new KpiCardViewModel { Title = "Pendiente", Value = totalPendiente.ToString("C"), IconClass = "bi bi-hourglass-split", ExtraClass = "" },
+        new KpiCardViewModel { Title = "Facturas", Value = countInvoices.ToString(), IconClass = "bi bi-receipt", ExtraClass = "" }
+    };
+
+    // Sales by month (últimos 12 meses)
+    var salesByMonth = invoices
+        .Where(i => i.InvoiceDate >= from && i.InvoiceDate <= to)
+        .GroupBy(i => new { i.InvoiceDate.Year, i.InvoiceDate.Month })
+        .Select(g => new { g.Key.Year, g.Key.Month, Total = g.Sum(x => x.Amount) })
+        .OrderBy(x => x.Year).ThenBy(x => x.Month)
+        .ToList();
+
+    // Status summary
+    var statusSummary = invoices
+        .GroupBy(i => i.Status)
+        .Select(g => new { Status = g.Key, Count = g.Count() })
+        .ToList();
+
+    // Top providers
+    var topProviders = invoices
+        .GroupBy(i => i.Provider.Name)
+        .Select(g => new { Provider = g.Key, Total = g.Sum(x => x.Amount) })
+        .OrderByDescending(x => x.Total)
+        .Take(10)
+        .ToList();
 }
 
-<div class="d-flex justify-content-between mb-3">
-    <h2>Proveedores</h2>
-    <div>
-        <a class="btn btn-success" asp-action="Create">Nuevo Proveedor</a>
-        @if (User.IsInRole(UserRole.Admin.ToString()))
-        {
-            <a class="btn btn-secondary" asp-action="InactiveProviders">Ver Inactivos</a>
-        }
+<h2>Dashboard de Proveedores</h2>
+
+<form method="get" class="row g-2 mb-4">
+    <div class="col-md-3">
+        <label class="form-label">Desde</label>
+        <input type="date" name="from" class="form-control" value="@from.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Hasta</label>
+        <input type="date" name="to" class="form-control" value="@to.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Proveedor</label>
+        <input type="text" name="name" class="form-control" value="@nameFilter" placeholder="Filtrar por nombre" />
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+        <button class="btn btn-primary w-100">Filtrar</button>
+    </div>
+</form>
+
+<div class="row row-cols-1 row-cols-md-4 g-3 mb-4">
+    @foreach (var card in cards)
+    {
+        @await Html.PartialAsync("_KpiCard", card)
+    }
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">Facturas por mes</div>
+            <div class="card-body">
+                <canvas id="salesChart" height="140"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header">Estado de facturas</div>
+            <div class="card-body">
+                <canvas id="statusChart" height="180"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">Top proveedores</div>
+            <div class="card-body">
+                <canvas id="providersChart" height="140"></canvas>
+            </div>
+        </div>
     </div>
 </div>
 
-@await Html.PartialAsync("_ProvidersTable", Model)
+<div class="mb-4">
+    <a class="btn btn-outline-primary me-2" asp-action="ListProviders">
+        <i class="bi bi-people"></i> Ver listado de proveedores
+    </a>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const salesLabels = [@string.Join(",", salesByMonth.Select(s => $"'{System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(s.Month)} {s.Year}'"))];
+        const salesData = [@string.Join(",", salesByMonth.Select(s => s.Total))];
+        new Chart(document.getElementById('salesChart'), { type: 'bar', data: { labels: salesLabels, datasets: [{ label: 'Facturas', data: salesData }] }, options: { responsive: true } });
+
+        const statusLabels = [@string.Join(",", statusSummary.Select(s => $"'{s.Status}'"))];
+        const statusData = [@string.Join(",", statusSummary.Select(s => s.Count))];
+        new Chart(document.getElementById('statusChart'), { type: 'doughnut', data: { labels: statusLabels, datasets: [{ data: statusData }] }, options: { responsive: true } });
+
+        const topProvidersLabels = [@string.Join(",", topProviders.Select(p => $"'{p.Provider}'"))];
+        const topProvidersData = [@string.Join(",", topProviders.Select(p => p.Total))];
+        new Chart(document.getElementById('providersChart'), { type: 'bar', data: { labels: topProvidersLabels, datasets: [{ label: 'Total', data: topProvidersData }] }, options: { indexAxis: 'y', responsive: true } });
+    </script>
+}

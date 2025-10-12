@@ -20,6 +20,7 @@ namespace ERPSystem.Data
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<FacturaViewModel> vw_FacturaCompleta { get; set; }
+        public DbSet<ProviderInvoice> ProviderInvoices { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

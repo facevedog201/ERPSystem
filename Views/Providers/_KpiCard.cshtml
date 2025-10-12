@@ -1,0 +1,13 @@
+﻿@model ERPSystem.ViewModels.KpiCardViewModel
+
+<div class="col">
+    <div class="card text-center shadow-sm @Model.ExtraClass">
+        <div class="card-body">
+            <div class="mb-2">
+                <i class="@Model.IconClass fs-2"></i>
+            </div>
+            <h6 class="card-title text-muted">@Model.Title</h6>
+            <h4 class="card-text fw-bold">@Model.Value</h4>
+        </div>
+    </div>
+</div>

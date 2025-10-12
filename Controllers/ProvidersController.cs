@@ -1,101 +1,4 @@
-﻿//using ERPSystem.Data;
-//using ERPSystem.Models;
-//using ERPSystem.Services;
-//using Microsoft.AspNetCore.Mvc;
-//using System.Linq;
-
-//namespace ERPSystem.Controllers
-//{
-//    public class ProvidersController : Controller
-//    {
-//        private readonly AppDbContext _context;
-//        private readonly AuditService _auditService;
-
-
-//        public ProvidersController(AppDbContext context, AuditService auditService)
-//        {
-//            _context = context;
-//            _auditService = auditService;
-//        }
-
-//        // Listar proveedores
-//        public IActionResult Index()
-//        {
-//            var providers = _context.Providers.ToList();
-//            return View(providers);
-//        }
-
-//        // Crear proveedor (GET)
-//        public IActionResult Create()
-//        {
-//            return View();
-//        }
-
-//        // Crear proveedor (POST)
-//        [HttpPost]
-//        [ValidateAntiForgeryToken]
-//        public IActionResult Create(Provider provider)
-//        {
-//            if (ModelState.IsValid)
-//            {
-//                _context.Providers.Add(provider);
-//                _context.SaveChanges();
-//                _auditService.Log("Create", "Provider", provider.ProviderId, $"Se creó el Proveedor {provider.ProviderId}");
-//                return RedirectToAction(nameof(Index));
-//            }
-//            return View(provider);
-//        }
-
-//        // Editar proveedor (GET)
-//        public IActionResult Edit(int id)
-//        {
-//            var provider = _context.Providers.Find(id);
-//            if (provider == null) return NotFound();
-//            return View(provider);
-//        }
-
-//        // Editar proveedor (POST)
-//        [HttpPost]
-//        [ValidateAntiForgeryToken]
-//        public IActionResult Edit(Provider provider)
-//        {
-//            if (ModelState.IsValid)
-//            {
-//                _context.Providers.Update(provider);
-//                _context.SaveChanges();
-//                _auditService.Log("Edit", "Provider", provider.ProviderId, $"Se creó el Proveedor {provider.ProviderId}");
-
-//                return RedirectToAction(nameof(Index));
-//            }
-//            return View(provider);
-//        }
-
-//        // Eliminar proveedor (GET)
-//        public IActionResult Delete(int id)
-//        {
-//            var provider = _context.Providers.Find(id);
-//            if (provider == null) return NotFound();
-//            return View(provider);
-//        }
-
-//        // Eliminar proveedor (POST)
-//        [HttpPost, ActionName("Delete")]
-//        [ValidateAntiForgeryToken]
-//        public IActionResult DeleteConfirmed(int id)
-//        {
-//            var provider = _context.Providers.Find(id);
-//            if (provider == null) return NotFound();
-
-//            _context.Providers.Remove(provider);
-//            _context.SaveChanges();
-//            _auditService.Log("Delete", "Provider", provider.ProviderId, $"Se creó el Proveedor {provider.ProviderId}");
-//            return RedirectToAction(nameof(Index));
-//        }
-//    }
-//}
-
-
-using ERPSystem.Data;
+﻿using ERPSystem.Data;
 using ERPSystem.Models;
 using ERPSystem.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -116,14 +19,95 @@ namespace ERPSystem.Controllers
             _auditService = auditService;
         }
 
-        // LISTAR PROVEEDORES ACTIVOS
-        public async Task<IActionResult> Index()
+        public IActionResult Index(DateTime? from, DateTime? to, int? providerId)
         {
-            var providers = await _context.Providers
-                                          .Where(p => p.IsActive)
-                                          .ToListAsync();
+            // Rangos de fecha por defecto (últimos 12 meses)
+            var end = to?.Date.AddDays(1).AddTicks(-1) ?? DateTime.Now;
+            var start = from?.Date ?? end.AddMonths(-11).Date;
+
+            // Query base de facturas de proveedores
+            var invoicesQuery = _context.ProviderInvoices
+                .Include(pi => pi.Provider)
+                .Where(pi => pi.InvoiceDate >= start && pi.InvoiceDate <= end)
+                .Where(pi => pi.Provider.IsActive); // Solo proveedores activos
+
+            // Filtro por proveedor
+            if (providerId.HasValue && providerId.Value > 0)
+            {
+                invoicesQuery = invoicesQuery.Where(pi => pi.ProviderId == providerId.Value);
+            }
+
+            var invoices = invoicesQuery.ToList();
+
+            // KPIs
+            var totalFacturado = invoices.Sum(i => i.Amount);
+            var totalCobrado = invoices.Sum(i => i.PaidAmount);
+            var totalPendiente = totalFacturado - totalCobrado;
+            var countInvoices = invoices.Count;
+
+            // Facturación por mes (últimos 12 meses)
+            var salesByMonth = invoices
+                .GroupBy(i => new { Year = i.InvoiceDate.Year, Month = i.InvoiceDate.Month })
+                .Select(g => new { Year = g.Key.Year, Month = g.Key.Month, Total = g.Sum(x => x.Amount) })
+                .OrderBy(x => x.Year).ThenBy(x => x.Month)
+                .ToList();
+
+            // Estado de facturas
+            var statusSummary = invoices
+                .GroupBy(i => i.Status)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToList();
+
+            // Top proveedores
+            var topProviders = invoices
+                .GroupBy(i => i.Provider.Name)
+                .Select(g => new { Provider = g.Key, Total = g.Sum(x => x.Amount) })
+                .OrderByDescending(x => x.Total)
+                .Take(10)
+                .ToList();
+
+            // Lista de proveedores activos para el filtro
+            var providers = _context.Providers
+                .Where(p => p.IsActive)
+                .OrderBy(p => p.Name)
+                .ToList();
+
+            // Pasar datos a la vista
+            ViewBag.From = start;
+            ViewBag.To = end;
+            ViewBag.SelectedProviderId = providerId ?? 0;
+            ViewBag.TotalFacturado = totalFacturado;
+            ViewBag.TotalCobrado = totalCobrado;
+            ViewBag.TotalPendiente = totalPendiente;
+            ViewBag.CountInvoices = countInvoices;
+            ViewBag.SalesByMonth = salesByMonth;
+            ViewBag.StatusSummary = statusSummary;
+            ViewBag.TopProviders = topProviders;
+            ViewBag.Providers = providers;
+
+            return View();
+        }
+
+        // Acción para el listado completo de proveedores
+        public IActionResult ProvidersList()
+        {
+            var providers = _context.Providers
+                .Where(p => p.IsActive)
+                .OrderBy(p => p.Name)
+                .ToList();
             return View(providers);
         }
+
+
+
+        //// LISTAR PROVEEDORES ACTIVOS
+        //public async Task<IActionResult> Index()
+        //{
+        //    var providers = await _context.Providers
+        //                                  .Where(p => p.IsActive)
+        //                                  .ToListAsync();
+        //    return View(providers);
+        //}
 
         // LISTAR PROVEEDORES INACTIVOS – solo Admin
         [Authorize(Roles = "Admin")]
