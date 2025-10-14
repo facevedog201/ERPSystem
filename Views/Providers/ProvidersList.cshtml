@@ -1,0 +1,16 @@
+﻿@model IEnumerable<ERPSystem.Models.Provider>
+@{
+    ViewData["Title"] = "Listado de Proveedores";
+}
+
+<h2>Listado de Proveedores</h2>
+
+<div class="container mt-4">
+    <!-- Opcional: Agrega un botón para regresar al dashboard -->
+    <a class="btn btn-secondary mb-3" asp-action="Index" asp-controller="Providers">
+        <i class="bi bi-arrow-left"></i> Volver al Dashboard
+    </a>
+
+    <!-- Renderiza el partial dentro de un card para consistencia -->
+    @await Html.PartialAsync("_ProvidersTable", Model)
+</div>

@@ -1,0 +1,50 @@
+﻿@model ERPSystem.ViewModels.ProviderPaymentViewModel
+@{
+    ViewData["Title"] = "Registrar pago";
+}
+
+<div class="card shadow-sm border-secondary">
+    <div class="card-header">
+        <h5 class="mb-0">Pago a factura @Model.InvoiceNumber — @Model.ProviderName</h5>
+    </div>
+    <div class="card-body">
+        <form asp-action="RegisterPayment" method="post">
+            <input type="hidden" asp-for="ProviderInvoiceId" />
+            <input type="hidden" asp-for="ProviderId" />
+            <input type="hidden" asp-for="ProviderName" />
+            <input type="hidden" asp-for="InvoiceNumber" />
+            <div class="mb-2">
+                <strong>Saldo pendiente:</strong> @Model.Outstanding.ToString("C")
+            </div>
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Amount" class="form-label"></label>
+                    <input asp-for="Amount" class="form-control" />
+                    <span asp-validation-for="Amount" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="PaymentDate" class="form-label"></label>
+                    <input asp-for="PaymentDate" type="date" class="form-control" />
+                    <span asp-validation-for="PaymentDate" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Note" class="form-label"></label>
+                <textarea asp-for="Note" class="form-control"></textarea>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success">Registrar pago</button>
+                <a asp-action="Index" asp-route-providerId="@Model.ProviderId" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

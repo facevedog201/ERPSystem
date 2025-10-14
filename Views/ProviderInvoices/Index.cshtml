@@ -1,0 +1,57 @@
+﻿@model IEnumerable<ERPSystem.Models.ProviderInvoice>
+@{
+    ViewData["Title"] = "Facturas de " + ViewBag.ProviderName;
+}
+
+<h2>Facturas de @ViewBag.ProviderName</h2>
+<a class="btn btn-secondary mb-3" asp-controller="Providers" asp-action="ProvidersList">
+    <i class="bi bi-arrow-left"></i> Volver a Proveedores
+</a>
+<a class="btn btn-primary mb-3"
+   asp-action="Create" asp-route-providerId="@ViewBag.ProviderId">
+    <i class="bi bi-file-earmark-plus"></i> Nueva factura
+</a>
+
+<div class="card shadow-sm border-secondary">
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>N° Factura</th>
+                    <th>Fecha</th>
+                    <th>Vencimiento</th>
+                    <th>Monto</th>
+                    <th>Pagado</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var i in Model)
+                {
+                    <tr>
+                        <td>@i.InvoiceNumber</td>
+                        <td>@i.InvoiceDate.ToString("dd/MM/yyyy")</td>
+                        <td>@i.DueDate.ToString("dd/MM/yyyy")</td>
+                        <td>@i.Amount.ToString("C")</td>
+                        <td>@i.PaidAmount.ToString("C")</td>
+                        <td>
+                            <span class="badge @(i.Status == "Pagada" ? "bg-success" : i.Status == "Parcial" ? "bg-warning" : "bg-danger")">
+                                @i.Status
+                            </span>
+                        </td>
+                        <td>
+                            @if (i.Amount > i.PaidAmount)
+                            {
+                                <a class="btn btn-sm btn-success"
+                                   asp-action="RegisterPayment" asp-route-id="@i.ProviderInvoiceId">
+                                    Registrar pago
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

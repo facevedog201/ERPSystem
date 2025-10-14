@@ -24,13 +24,31 @@ namespace ERPSystem.Controllers
         }
 
         // LISTAR CLIENTES ACTIVOS
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchQuery)
         {
-            var clients = await _context.Clients
-                                        .Where(c => c.IsActive==true)
-                                        .ToListAsync();
-            return View(clients);
+            var clients = _context.Clients.Where(c => c.IsActive == true);
+
+            if (!string.IsNullOrEmpty(searchQuery))
+            {
+                clients = clients.Where(c =>
+                    c.Name.Contains(searchQuery) ||
+                    (c.RUC != null && c.RUC.Contains(searchQuery)) ||
+                    (c.Phone != null && c.Phone.Contains(searchQuery)) ||
+                    (c.Email != null && c.Email.Contains(searchQuery))
+                );
+            }
+
+            return View(await clients.ToListAsync());
         }
+
+        //// LISTAR CLIENTES ACTIVOS
+        //public async Task<IActionResult> Index()
+        //{
+        //    var clients = await _context.Clients
+        //                                .Where(c => c.IsActive==true)
+        //                                .ToListAsync();
+        //    return View(clients);
+        //}
 
         // LISTAR CLIENTES INACTIVOS
         public async Task<IActionResult> InactiveClients()

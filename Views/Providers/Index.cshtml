@@ -52,6 +52,12 @@
 
 <h2>Dashboard de Proveedores</h2>
 
+<div class="mb-4">
+    <a class="btn btn-primary" asp-action="ProvidersList">
+        <i class="bi bi-people"></i> Ver listado de proveedores
+    </a>
+</div>
+
 <form method="get" class="row g-2 mb-4">
     <div class="col-md-3">
         <label class="form-label">Desde</label>
@@ -66,7 +72,7 @@
         <input type="text" name="name" class="form-control" value="@nameFilter" placeholder="Filtrar por nombre" />
     </div>
     <div class="col-md-2 d-flex align-items-end">
-        <button class="btn btn-primary w-100">Filtrar</button>
+        <button class="btn btn-primary"><i class="bi bi-search me-2"></i> Filtrar</button>
     </div>
 </form>
 
@@ -101,13 +107,6 @@
         </div>
     </div>
 </div>
-
-<div class="mb-4">
-    <a class="btn btn-outline-primary me-2" asp-action="ListProviders">
-        <i class="bi bi-people"></i> Ver listado de proveedores
-    </a>
-</div>
-
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>

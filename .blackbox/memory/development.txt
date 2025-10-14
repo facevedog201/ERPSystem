@@ -1,0 +1,3 @@
+# ASP.NET Core Razor Card View Bootstrap UI Design
+Template para vista tipo cards en lugar de tabla para listar objetos como clientes en una página Razor.
+
