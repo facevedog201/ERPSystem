@@ -19,10 +19,9 @@ public class ProviderInvoicesController : Controller
     }
 
     // LISTAR FACTURAS POR PROVEEDOR
-    public async Task<IActionResult> Index(int providerId)
+    public async Task<IActionResult> Index(int providerId, DateTime? from, DateTime? to, string name)
     {
-        var provider = await _context.Providers.FindAsync(providerId);
-        if (provider == null) return NotFound();
+        var provider = await _context.Providers.FindAsync(providerId); if (provider == null) return NotFound();
 
         var invoices = await _context.ProviderInvoices
             .Where(i => i.ProviderId == providerId)
@@ -41,7 +40,7 @@ public class ProviderInvoicesController : Controller
         var provider = _context.Providers.Find(providerId);
         if (provider == null) return NotFound();
 
-        var model = new ProviderInvoice
+        var model = new ProviderInvoices
         {
             ProviderId = providerId,
             InvoiceDate = DateTime.Today,
@@ -54,7 +53,7 @@ public class ProviderInvoicesController : Controller
     // CREAR FACTURA (POST)
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(ProviderInvoice model)
+    public async Task<IActionResult> Create(ProviderInvoices model)
     {
         // Validación adicional de negocio
         if (model.InvoiceDate > model.DueDate)
