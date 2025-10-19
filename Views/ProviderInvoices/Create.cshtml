@@ -32,8 +32,8 @@
             </div>
 
             <div class="mb-3">
-                <label asp-for="Amount" class="form-label"></label>
-                <input asp-for="Amount" class="form-control" />
+                <label asp-for="Amount" class="control-label"></label>
+                <input asp-for="Amount" class="form-control" type="number" step="0.01" min="1"/>
                 <span asp-validation-for="Amount" class="text-danger"></span>
             </div>
 
