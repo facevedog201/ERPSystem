@@ -200,10 +200,28 @@ namespace ERPSystem.Controllers
             var provider = await _context.Providers.FindAsync(id);
             if (provider != null && provider.IsActive)
             {
+                // Validar si el proveedor tiene facturas pendientes
+                int countInvoices = await _context.ProviderInvoices
+                    .CountAsync(pi => pi.ProviderId == id && pi.InvoiceNumber != null);
+                // Validar si el proveedor tiene facturas pendientes
+                bool hasPendingInvoices = await _context.ProviderInvoices
+                    .AnyAsync(pi => pi.ProviderId == id && pi.Status !="Pagada");
+                if(countInvoices > 0 && hasPendingInvoices)
+                {
+                    TempData["ErrorMessage"] = "No se puede dar de baja este proveedor porque tiene facturas asociadas.";
+                    return RedirectToAction(nameof(ProvidersList));
+                }
+                //if (hasPendingInvoices)
+                //{
+                //    TempData["ErrorMessage"] = "No se puede dar de baja este proveedor porque tiene facturas pendientes de pago.";
+                //    return RedirectToAction(nameof(ProvidersList));
+                //}
+
                 provider.IsActive = false;
                 _context.Update(provider);
                 await _context.SaveChangesAsync();
                 _auditService.Log("Delete", "Provider", provider.ProviderId, $"Se eliminó (soft) el proveedor {provider.Name}");
+                TempData["SuccessMessage"] = "Proveedor dado de baja correctamente.";
             }
             return RedirectToAction(nameof(Index));
         }
