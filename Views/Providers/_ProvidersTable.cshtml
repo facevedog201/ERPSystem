@@ -1,6 +1,21 @@
 ﻿@model IEnumerable<ERPSystem.Models.Provider>
 @using ERPSystem.Helpers
 
+<!-- Formulario de búsqueda -->
+<div class="mb-3">
+    <form method="get" action="@Url.Action("ProvidersList", "Providers")" class="form-inline">
+        <div class="form-group mr-2">
+            <label for="searchQuery">Buscar por Nombre, RUC, Teléfono o Correo:</label><p></p>
+            <input type="text" id="searchQuery" name="searchQuery" class="form-control"
+                   placeholder="Ingresa tu búsqueda..."
+                   value="@Context.Request.Query["searchQuery"]" /><p></p>
+        </div>
+        <button type="submit" class="btn btn-secondary">Buscar</button>
+        <a href="@Url.Action("ProvidersList", "Providers")" class="btn btn-outline-secondary ml-2">Limpiar</a>
+    </form>
+
+</div>
+
 <div class="row row-cols-1 row-cols-md-3 g-4">
     @* Grid responsivo: 1 columna en móvil, 3 en desktop *@
     @foreach (var provider in Model)

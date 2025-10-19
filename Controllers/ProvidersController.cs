@@ -89,14 +89,39 @@ namespace ERPSystem.Controllers
         }
 
         // Acción para el listado completo de proveedores
-        public IActionResult ProvidersList()
+        //public IActionResult ProvidersList()
+        //{
+        //    var providers = _context.Providers
+        //        .Where(p => p.IsActive)
+        //        .OrderBy(p => p.Name)
+        //        .ToList();
+        //    return View(providers);
+        //}
+
+        public IActionResult ProvidersList(string searchQuery)
         {
             var providers = _context.Providers
                 .Where(p => p.IsActive)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(searchQuery))
+            {
+                searchQuery = searchQuery.ToLower();
+                providers = providers.Where(p =>
+                    p.Name.ToLower().Contains(searchQuery) ||
+                    (p.Address != null && p.Address.ToLower().Contains(searchQuery)) ||
+                    (p.Phone != null && p.Phone.ToLower().Contains(searchQuery)) ||
+                    (p.Email != null && p.Email.ToLower().Contains(searchQuery))
+                );
+            }
+
+            var result = providers
                 .OrderBy(p => p.Name)
                 .ToList();
-            return View(providers);
+
+            return View(result);
         }
+
 
 
 
