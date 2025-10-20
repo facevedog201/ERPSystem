@@ -7,20 +7,20 @@ namespace ERPSystem.Models
     public class InvoiceDetail
     {
         [Key]
-        public int InvoiceDetailId { get; set; }
+        public int InvoiceDetailId { get; set; } 
 
-        public int InvoiceId { get; set; }
-        public Invoice Invoice { get; set; }
+        public int InvoiceId { get; set; } = 0;
+        public Invoice Invoice { get; set; } public InvoiceDetail() { }
 
-        public int ServiceId { get; set; }
-        public Service Service { get; set; }
+        public int ServiceId { get; set; } = 0;
+        public Service Service { get; set; } 
 
         public int Quantity { get; set; } = 1;
 
-         public decimal Price { get; set; }
+         public decimal Price { get; set; } = 0;
 
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-        public decimal Total { get; set; }
+        public decimal Total { get; set; } = 0; 
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }

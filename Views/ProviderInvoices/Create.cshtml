@@ -1,6 +1,6 @@
 ﻿@model ERPSystem.Models.ProviderInvoices
 @{
-    ViewData["Title"] = "Nueva factura";
+    ViewData["Title"] = "Nueva factura Proveedor";
 }
 
 <div class="card shadow-sm border-secondary">
@@ -38,8 +38,14 @@
             </div>
 
             <div class="mb-3">
-                <label asp-for="Description" class="form-label"></label>
-                <textarea asp-for="Description" class="form-control"></textarea>
+                <label asp-for="Description" class="control-label">Description:</label>
+                <input asp-for="Description" class="form-control" type="text" step="0.01" min="1" />
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="RUC" class="control-label"># RUC:</label>
+                <input asp-for="RUC" class="form-control" type="text" step="0.01" min="1" />
+                <span asp-validation-for="RUC" class="text-danger"></span>
             </div>
 
             <div class="d-flex gap-2">

@@ -8,8 +8,8 @@ namespace ERPSystem.Models
     {
         public int InvoiceId { get; set; }
 
-        public int ClientId { get; set; }    // clave foránea (columna en la tabla)
-        public Client Client { get; set; }   // navegación al objeto Client
+        public int ClientId { get; set; }   // clave foránea (columna en la tabla)
+        public Client Client { get; set; }    // navegación al objeto Client
 
 
         public DateTime? InvoiceDate { get; set; } = DateTime.Now;
@@ -18,17 +18,17 @@ namespace ERPSystem.Models
         public decimal? PaidAmount { get; set; } = 0;
         public int? Status { get; set; } = (int)InvoiceStatus.Pending;
         public bool? IsActive { get; set; } = true;
-        public int? InvoiceNumber { get; set; }
-        public int? Type { get; set; }
-        public decimal? ExchangeRate { get; set; }
-        public string? Reference { get; set; }
-        public decimal? CIF { get; set; }
-        public string? Shipping { get; set; }
-        public string? AmountInWords { get; set; }
-        public decimal? Total { get; set; }
-        public decimal? SubTotal { get; set; }
-        public decimal? TaxAmount { get; set; }
-        public string? Observations { get; set; }
+        public int? InvoiceNumber { get; set; } = 0;
+        public int? Type { get; set; } = 0; // 0=Credito, 1=Contado, etc.
+        public decimal? ExchangeRate { get; set; } = 1;
+        public string? Reference { get; set; } = string.Empty;
+        public decimal? CIF { get; set; } = 0;
+        public string? Shipping { get; set; } = string.Empty;
+        public string? AmountInWords { get; set; } = string.Empty;
+        public decimal? Total { get; set; } = 0;
+        public decimal? SubTotal { get; set; } = 0;
+        public decimal? TaxAmount { get; set; } = 0;
+        public string? Observations { get; set; } = string.Empty;
 
         // Relaciones
         public List<InvoiceDetail> InvoiceDetails { get; set; } = new();

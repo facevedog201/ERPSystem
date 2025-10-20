@@ -7,20 +7,29 @@
 
 <form asp-action="Create" method="post">
     <div class="form-group mt-2">
-        <label>Nombre</label>
+        <label asp-for="Name" class="form-label">Nombre: </label>
         <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
     </div>
     <div class="form-group mt-2">
-        <label>Email</label>
+        <label asp-for="Email" class="form-label">Correo: </label>
         <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
     </div>
     <div class="form-group mt-2">
-        <label>Teléfono</label>
+        <label asp-for="Phone" class="form-label">Telefono: </label>
         <input asp-for="Phone" class="form-control" />
+        <span asp-validation-for="Phone" class="text-danger"></span>
     </div>
     <div class="form-group mt-2">
-        <label>Dirección</label>
+        <label asp-for="Address" class="form-label">Direccion: </label>
         <input asp-for="Address" class="form-control" />
+        <span asp-validation-for="Address" class="text-danger"></span>
+    </div>
+    <div class="form-group mt-2">
+        <label asp-for="RUC" class="form-label">RUC: </label>
+        <input asp-for="RUC" class="form-control" />
+        <span asp-validation-for="RUC" class="text-danger"></span>
     </div>
 
     <button type="submit" class="btn btn-success mt-3">Guardar</button>

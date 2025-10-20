@@ -8,14 +8,18 @@ namespace ERPSystem.Models
     {
         [Key]
         public int ProviderInvoiceId { get; set; }
-        public int ProviderId { get; set; }
+        public int ProviderId { get; set; } = 0;    
 
         [ForeignKey("ProviderId")]
         [ValidateNever]
-        public Provider? Provider { get; set; }
+        public Provider? Provider { get; set; } 
         [Required(ErrorMessage = "El número de factura es obligatorio.")]
         [StringLength(50)]
-        public string InvoiceNumber { get; set; }
+        public string InvoiceNumber { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "El número de RUC es obligatorio.")]
+        [StringLength(50)]
+        public string? RUC { get; set; } = string.Empty;
 
         public DateTime DueDate { get; set; } = DateTime.Today.AddDays(30);
 
@@ -32,7 +36,7 @@ namespace ERPSystem.Models
 
         public string Status { get; set; } = "Pendiente"; // Por ejemplo: "Pendiente", "Pagada", "Parcial"
 
-        public string? Description { get; set; }
+        public string? Description { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }
