@@ -127,23 +127,52 @@ namespace ERPSystem.Controllers
             var start = from?.Date ?? end.AddYears(-1).Date;
 
             var data = _context.Invoices
-                        .Include(i => i.Client)
-                        .Where(i => i.InvoiceDate >= start && i.InvoiceDate <= end)
-                        .GroupBy(i => i.Client.Name)
-                        .Select(g => new
-                        {
-                            Client = g.Key,
-                            Count = g.Count(),
-                            Total = g.Sum(i => i.Total)
-                        })
-                        .OrderByDescending(x => x.Total)
-                        .ToList();
+    .Include(i => i.Client)
+    .Where(i => i.InvoiceDate >= start && i.InvoiceDate <= end)
+    .GroupBy(i => i.Client.Name)
+    .Select(g => new
+    {
+        Client = g.Key,
+        Count = g.Count(),
+        Total = g.Sum(i => i.Total),
 
+        // 💰 Monto pendiente: cualquier factura con diferencia entre Total y PaidAmount
+        MontoPendiente = g
+            .Where(i => i.Total > i.PaidAmount)
+            .Sum(i => i.Total - i.PaidAmount),
+
+        // 📄 Facturas pendientes: aquellas con saldo > 0
+        FacturasPendientes = g.Count(i => i.Total > i.PaidAmount),
+
+        // 💵 Monto pagado: suma de lo efectivamente abonado
+        MontoPagado = g.Sum(i => i.PaidAmount),
+
+        // ✅ Facturas pagadas: total pagado igual o mayor al total de la factura
+        FacturasPagadas = g.Count(i => i.PaidAmount >= i.Total && i.Total > 0)
+    })
+    .OrderByDescending(x => x.Total)
+    .ToList();
+
+
+            // ✅ Exportar a Excel
             if (!string.IsNullOrEmpty(export) && export == "excel")
             {
-                var rows = data.Select(d => (d.Client, d.Count, d.Total ?? 0m)); // se usa el operador ?? para manejar posibles nulos si es nulo se asigna 0m que significa 0 decimal
+                var rows = data.Select(d => (
+                    d.Client,
+                    d.Count,
+                    d.Total ?? 0m, // <-- FIX: convert decimal? to decimal
+                    d.MontoPendiente ?? 0m, // <-- FIX: convert decimal? to decimal
+                    d.FacturasPendientes,
+                    d.MontoPagado ?? 0m, // <-- FIX: convert decimal? to decimal
+                    d.FacturasPagadas
+                ));
+
                 var bytes = _export.ExportClientsToExcel(rows, "Clientes");
-                return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"clientes_{start:yyyyMMdd}_{end:yyyyMMdd}.xlsx");
+                return File(
+                    bytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    $"clientes_{start:yyyyMMdd}_{end:yyyyMMdd}.xlsx"
+                );
             }
 
             ViewBag.From = start;
@@ -211,43 +240,6 @@ namespace ERPSystem.Controllers
          .Where(p => p.PaymentDate != null) // Opcional
          .ToList();
 
-                return View(data);
-
-
-                if (export == "excel")
-                {
-                    using var workbook = new ClosedXML.Excel.XLWorkbook();
-                    var ws = workbook.Worksheets.Add("Pagos");
-
-                    ws.Cell(1, 1).Value = "ID Pago";
-                    ws.Cell(1, 2).Value = "Fecha";
-                    ws.Cell(1, 3).Value = "Cliente";
-                    ws.Cell(1, 4).Value = "Factura ID";
-                    ws.Cell(1, 5).Value = "Monto";
-                    ws.Cell(1, 6).Value = "Notas";
-
-                    int row = 2;
-                    foreach (var p in data)
-                    {
-                        ws.Cell(row, 1).Value = p.PaymentId;
-                        ws.Cell(row, 2).Value = p.PaymentDate.ToString("dd/MM/yyyy");
-                        ws.Cell(row, 3).Value = p.ClientName;
-                        ws.Cell(row, 4).Value = p.InvoiceId;
-                        ws.Cell(row, 5).Value = p.Amount;
-                        ws.Cell(row, 6).Value = p.Notes;
-                        row++;
-                    }
-
-                    using var stream = new MemoryStream();
-                    workbook.SaveAs(stream);
-                    stream.Position = 0;
-                    return File(stream.ToArray(),
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        $"Pagos_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
-                }
-
-                ViewBag.From = from;
-                ViewBag.To = to;
                 return View(data);
             }
             catch (SqlNullValueException sqlEx)

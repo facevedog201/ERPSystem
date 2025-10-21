@@ -7,7 +7,7 @@
     var selectedClientId = (ViewBag.SelectedClientId as int?) ?? 0;
 }
 
-<h2>Dashboard</h2>
+<h2>Cuentas por Cobrar</h2>
 
 <form method="get" class="row g-2 mb-4">
     <div class="col-md-3">
@@ -37,7 +37,7 @@
 
     </div>
     <div class="col-md-2 d-flex align-items-end">
-        <button class="btn btn-primary w-100">Filtrar</button>
+        <button class="btn btn-primary w-50"><i class="bi bi-search"></i> Filtrar</button>
     </div>
 </form>
 
@@ -48,47 +48,26 @@
     @await Html.PartialAsync("_KpiCard", (Title: "Facturas", Value: ((int)ViewBag.CountInvoices).ToString(), IconClass: "bi bi-receipt", ExtraClass: ""))
 </div>
 
-<div class="row mb-4">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">Ventas por mes</div>
-            <div class="card-body">
-                <canvas id="salesChart" height="140"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card mb-3">
-            <div class="card-header">Estado de facturas</div>
-            <div class="card-body">
-                <canvas id="statusChart" height="180"></canvas>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">Top clientes</div>
-            <div class="card-body">
-                <canvas id="clientsChart" height="140"></canvas>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div class="mb-4">
-    <a class="btn btn-outline-primary me-2" asp-action="Sales">
+    <a class="btn btn-primary me-2" asp-action="Sales">
         <i class="bi bi-graph-up"></i> Detalles de ventas
     </a>
-    <a class="btn btn-outline-primary me-2" asp-action="Clients">
+    <a class="btn btn-primary me-2" asp-action="Clients">
         <i class="bi bi-people"></i> Reporte por clientes
     </a>
-    <a class="btn btn-outline-primary me-2" asp-action="ServicesReport">
+    <a class="btn btn-primary me-2" asp-action="ServicesReport">
         <i class="bi bi-gear"></i> Reporte de servicios
     </a>
-    <a class="btn btn-outline-primary" asp-action="Payments">
+    <a class="btn btn-primary" asp-action="Payments">
         <i class="bi bi-wallet2"></i> Historial de pagos
     </a>
-
+    <a class="btn btn-primary" asp-controller="Invoices" asp-action="Index">
+        <i class="bi bi-receipt"></i> Lista de facturas
+    </a>
+    <a class="btn btn-success me-2" asp-controller="Invoices" asp-action="Create">
+        <i class="bi bi-file-earmark-plus"></i> Nueva factura
+    </a>
 </div>
 
 @section Scripts {

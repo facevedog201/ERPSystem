@@ -7,10 +7,14 @@
     <link rel="stylesheet" href="~/css/print.css" />
 }
 
+<!-- Encabezado visible solo en impresión -->
+<div class="print-header">
+    <img src="~/images/logo.png" alt="Logo" style="height:40px;" />
+    <div>PepiTO - Reporte de Pagos</div>
+</div>
+<h2 class="no-print">Reporte de Pagos</h2>
 
-<h2>@ViewData["Title"]</h2>
-
-<form method="get" class="row g-2 mb-3">
+<form method="get" class="row g-2 mb-3 no-print">
     <div class="col-md-3">
         <label>Desde</label>
         <input type="date" name="from" value="@((ViewBag.From as DateTime?)?.ToString("yyyy-MM-dd"))" class="form-control" />
@@ -21,12 +25,11 @@
     </div>
     <div class="col-md-3 d-flex align-items-end">
         <button class="btn btn-primary me-2"><i class="bi bi-funnel-fill"></i>Filtrar</button>
-        <a href="?export=excel" class="btn btn-success"><i class="bi bi-file-earmark-excel-fill"></i>Exportar Excel</a>
     </div>
 </form>
 
-<table class="table table-bordered table-striped">
-    <thead>
+<table class="table table-bordered table-striped mt-3">
+    <thead class="table-dark">
         <tr>
             <th>ID Pago</th>
             <th>Fecha</th>
@@ -51,13 +54,12 @@
     </tbody>
 </table>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Reporte de Pagos</h2>
+<div class="d-flex justify-content-between align-items-center mb-3 no-print">
     <div>
-        <button class="btn btn-outline-primary me-2" onclick="window.print()">
+        <button class="btn btn-primary me-2" onclick="window.print()">
             <i class="bi bi-printer"></i> Imprimir
         </button>
-        <a asp-action="Index" class="btn btn-secondary">
+        <a asp-action="Index" class="btn btn-danger">
             <i class="bi bi-arrow-left-circle"></i> Volver
         </a>
     </div>
