@@ -14,7 +14,7 @@
 
             <div class="mb-3">
                 <label asp-for="InvoiceNumber" class="form-label"></label>
-                <input asp-for="InvoiceNumber" class="form-control" />
+                <input asp-for="InvoiceNumber" type="text" class="form-control" />
                 <span asp-validation-for="InvoiceNumber" class="text-danger"></span>
             </div>
 
@@ -39,12 +39,12 @@
 
             <div class="mb-3">
                 <label asp-for="Description" class="control-label">Description:</label>
-                <input asp-for="Description" class="form-control" type="text" step="0.01" min="1" />
+                <input asp-for="Description" class="form-control" type="text" spellcheck="true"/>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
             <div class="mb-3">
                 <label asp-for="RUC" class="control-label"># RUC:</label>
-                <input asp-for="RUC" class="form-control" type="text" step="0.01" min="1" />
+                <input asp-for="RUC" class="form-control" type="text" />
                 <span asp-validation-for="RUC" class="text-danger"></span>
             </div>
 

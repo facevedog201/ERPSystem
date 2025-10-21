@@ -8,30 +8,30 @@
 <form asp-action="Create" method="post">
     <div class="form-group mt-2">
         <label asp-for="Name" class="control-label">Nombre</label>
-        <input asp-for="Name" class="form-control" />
+        <input asp-for="Name" type="text"  class="form-control" />
         <span asp-validation-for="Name" class="text-danger"></span>
     </div>
 
     <div class="form-group mt-2">
         <label asp-for="Email" class="control-label">Email</label>
-        <input asp-for="Email" class="form-control" />
+        <input asp-for="Email" type="email"  class="form-control" />
         <span asp-validation-for="Email" class="text-danger"></span>
     </div>
 
     <div class="form-group mt-2">
         <label asp-for="Phone" class="control-label">Teléfono</label>
-        <input asp-for="Phone" class="form-control" />
+        <input asp-for="Phone" type="tel" class="form-control" />
         <span asp-validation-for="Phone" class="text-danger"></span>
     </div>
 
     <div class="form-group mt-2">
         <label asp-for="Address" class="control-label">Dirección</label>
-        <input asp-for="Address" class="form-control" />
+        <input asp-for="Address" type="text" class="form-control" />
         <span asp-validation-for="Address" class="text-danger"></span>
     </div>
     <div class="form-group mt-2">
         <label asp-for="RUC" class="control-label">RUC / NIT / Identificación Fiscal</label>
-        <input asp-for="RUC" class="form-control" />
+        <input asp-for="RUC" type="text" class="form-control" />
         <span asp-validation-for="RUC" class="text-danger"></span>
     </div>
 

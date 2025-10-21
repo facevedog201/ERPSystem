@@ -3,40 +3,64 @@
     ViewData["Title"] = "Editar Proveedor";
 }
 
-<h2>Editar Proveedor</h2>
+<div class="container mt-4">
+    <h2 class="mb-4">Editar datos del Proveedor</h2>
 
-<form asp-action="Edit" method="post">
-    <input type="hidden" asp-for="ProviderId" />
+    <div class="card shadow-sm border-secondary">
+        <div class="card-body">
+            <form asp-action="Edit" method="post">
+                <input type="hidden" asp-for="ProviderId" />
 
-    <div class="form-group mt-2">
-        <label>Nombre</label>
-        <input asp-for="Name" class="form-control" />
-    </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Name" class="form-label">Nombre del Proveedor</label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
 
-    <div class="form-group mt-2">
-        <label>Email</label>
-        <input asp-for="Email" class="form-control" />
-    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Email" class="form-label">Correo Electrónico</label>
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                </div>
 
-    <div class="form-group mt-2">
-        <label>Teléfono</label>
-        <input asp-for="Phone" class="form-control" />
-    </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Phone" class="form-label">Teléfono</label>
+                        <input asp-for="Phone" class="form-control" />
+                        <span asp-validation-for="Phone" class="text-danger"></span>
+                    </div>
 
-    <div class="form-group mt-2">
-        <label>Dirección</label>
-        <input asp-for="Address" class="form-control" />
-    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="RUC" class="form-label">RUC / NIT / Identificación Fiscal</label>
+                        <input asp-for="RUC" class="form-control" />
+                        <span asp-validation-for="RUC" class="text-danger"></span>
+                    </div>
+                </div>
 
-    @* Checkbox para controlar si el proveedor está activo, solo visible para Admin *@
-    @if (User.IsInRole(UserRole.Admin.ToString()))
-    {
-        <div class="form-check mt-3">
-            <input class="form-check-input" type="checkbox" asp-for="IsActive" />
-            <label class="form-check-label">Activo</label>
+                <div class="mb-3">
+                    <label asp-for="Address" class="form-label">Dirección</label>
+                    <input asp-for="Address" class="form-control" />
+                    <span asp-validation-for="Address" class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="CreatedAt" class="form-label">Fecha de Creación</label>
+                        <input asp-for="CreatedAt" class="form-control" type="date" readonly />
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <button type="submit" class="btn btn-success me-2">
+                        <i class="bi bi-save"></i> Guardar
+                    </button>
+                    <a asp-action="ProvidersList" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </a>
+                </div>
+            </form>
         </div>
-    }
-
-    <button type="submit" class="btn btn-success mt-3">Guardar</button>
-    <a asp-action="Index" class="btn btn-secondary mt-3">Cancelar</a>
-</form>
+    </div>
+</div>
