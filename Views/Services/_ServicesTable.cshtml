@@ -1,12 +1,19 @@
 ﻿@model IEnumerable<ERPSystem.Models.Service>
 @using ERPSystem.Helpers
+@using System.Globalization
 
-<table class="table table-striped">
-    <thead>
+@{
+    var nicaraguanCulture = new CultureInfo("es-NI");
+}
+
+<table class="table table-striped align-middle">
+    <thead class="table-dark">
         <tr>
             <th>Nombre</th>
             <th>Descripción</th>
-            <th>Precio</th>
+            <th>Precio Base</th>
+            <th>Aplica IVA</th>
+            <th>Precio con IVA</th>
             <th>Tipo</th>
             <th>Activo</th>
             <th>Acciones</th>
@@ -15,10 +22,18 @@
     <tbody>
         @foreach (var item in Model)
         {
+            var precioConIVA = item.HasIVA ? item.Price * 1.15m : item.Price;
+
             <tr>
                 <td>@item.Name</td>
                 <td>@item.Description</td>
-                <td>@item.Price.ToString("C")</td>
+                <td>@string.Format(nicaraguanCulture, "{0:C}", item.Price)</td>
+                <td>
+                    <span class="badge @(item.HasIVA ? "bg-success" : "bg-secondary")">
+                        @(item.HasIVA ? "Sí" : "No")
+                    </span>
+                </td>
+                <td>@string.Format(nicaraguanCulture, "{0:C}", precioConIVA)</td>
                 <td>@item.Type</td>
                 <td>
                     <span class="badge @(item.IsActive ? "bg-success" : "bg-danger")">
@@ -30,10 +45,14 @@
                     {
                         @if (User.IsInRole(UserRole.Admin.ToString()) || User.IsInRole(UserRole.Recepcion.ToString()))
                         {
-                            <a class="btn btn-sm btn-primary" asp-action="Edit" asp-route-id="@item.ServiceId">Editar</a>
+                            <a class="btn btn-sm btn-primary" asp-action="Edit" asp-route-id="@item.ServiceId">
+                                <i class="bi bi-pencil-square"></i> Editar
+                            </a>
                             @if (User.IsInRole(UserRole.Admin.ToString()))
                             {
-                                <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.ServiceId">Eliminar</a>
+                                <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@item.ServiceId">
+                                    <i class="bi bi-trash"></i> Eliminar
+                                </a>
                             }
                         }
                     }
@@ -41,7 +60,9 @@
                     {
                         @if (User.IsInRole(UserRole.Admin.ToString()))
                         {
-                            <a class="btn btn-sm btn-success" asp-action="Activate" asp-route-id="@item.ServiceId">Reactivar</a>
+                            <a class="btn btn-sm btn-success" asp-action="Activate" asp-route-id="@item.ServiceId">
+                                <i class="bi bi-arrow-clockwise"></i> Reactivar
+                            </a>
                         }
                     }
                 </td>

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+
 
 namespace ERPSystem.Models
 {
@@ -10,9 +12,13 @@ namespace ERPSystem.Models
         public int InvoiceDetailId { get; set; } 
 
         public int InvoiceId { get; set; } = 0;
+
+        [ValidateNever]
         public Invoice Invoice { get; set; } public InvoiceDetail() { }
 
         public int ServiceId { get; set; } = 0;
+
+        [ValidateNever]
         public Service Service { get; set; } 
 
         public int Quantity { get; set; } = 1;

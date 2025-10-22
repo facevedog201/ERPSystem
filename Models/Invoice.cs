@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System;
 using System.Collections.Generic;
 
@@ -9,6 +10,8 @@ namespace ERPSystem.Models
         public int InvoiceId { get; set; }
 
         public int ClientId { get; set; }   // clave foránea (columna en la tabla)
+
+        [ValidateNever]
         public Client Client { get; set; }    // navegación al objeto Client
 
 

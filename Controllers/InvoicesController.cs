@@ -96,7 +96,6 @@ namespace ERPSystem.Controllers
             return View("FacturaReport", datos);
         }
 
-        // CREAR
         [RoleAuthorize("Admin", "Contador", "Recepcion", "Vendedor", "Asistente")]
         public IActionResult Create()
         {
@@ -109,34 +108,79 @@ namespace ERPSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Invoice invoice, List<InvoiceDetail> details)
         {
-            if (!ModelState.IsValid)
+            if (details == null || details.Count == 0)
+            {
+                ModelState.AddModelError("", "Debe agregar al menos un servicio a la factura.");
+                ViewBag.Clients = _context.Clients.ToList();
+                ViewBag.Services = _context.Services.Where(s => s.IsActive).ToList();
                 return View(invoice);
+            }
 
-            // Guardar factura y detalles
+            // DEBUG: imprimir contenido del form y ModelState (temporal)
+            Console.WriteLine("---- DEBUG: Request.Form ----");
+            foreach (var k in Request.Form.Keys)
+            {
+                Console.WriteLine($"{k} = {Request.Form[k]}");
+            }
+
+            Console.WriteLine("---- DEBUG: ModelState entries ----");
+            foreach (var entry in ModelState)
+            {
+                if (entry.Value.Errors != null && entry.Value.Errors.Count > 0)
+                {
+                    Console.WriteLine($"Key: {entry.Key}");
+                    foreach (var err in entry.Value.Errors)
+                    {
+                        Console.WriteLine($"  Error: {err.ErrorMessage} | Exception: {err.Exception?.Message}");
+                    }
+                }
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Clients = _context.Clients.ToList();
+                ViewBag.Services = _context.Services.Where(s => s.IsActive).ToList();
+                return View(invoice);
+            }
+
             invoice.CreatedAt = DateTime.Now;
             invoice.InvoiceDate = DateTime.Now;
 
             _context.Add(invoice);
             await _context.SaveChangesAsync();
 
+            decimal subtotalGeneral = 0;
+            decimal ivaGeneral = 0;
+
             foreach (var detail in details)
             {
                 detail.InvoiceId = invoice.InvoiceId;
+                var service = _context.Services.FirstOrDefault(s => s.ServiceId == detail.ServiceId);
+                if (service == null) continue;
+
+                detail.Price = service.Price;
+                detail.Quantity = detail.Quantity <= 0 ? 1 : detail.Quantity;
+
+                decimal subtotal = detail.Quantity * service.Price;
+                decimal iva = service.HasIVA ? subtotal * 0.15M : 0;
+                detail.Total = subtotal + iva;
+
+                subtotalGeneral += subtotal;
+                ivaGeneral += iva;
+
                 _context.InvoiceDetails.Add(detail);
             }
 
+            invoice.SubTotal = subtotalGeneral;
+            invoice.TaxAmount = ivaGeneral;
+            invoice.Total = subtotalGeneral + ivaGeneral;
+            invoice.AmountInWords = invoice.NumberToWords(invoice.Total ?? 0m);
+
             await _context.SaveChangesAsync();
 
-            // Actualizar totales y convertir a letras
-            invoice.SubTotal = details.Sum(d => d.Quantity * d.Price);
-            invoice.TaxAmount = (invoice.SubTotal * 0.15M); // Ejemplo de IVA
-            invoice.Total = invoice.SubTotal + invoice.TaxAmount;
-            invoice.AmountInWords = invoice.NumberToWords(invoice.Total ?? 0m); //El operador ?? asegura que no se pase un valor nulo y si es nulo se pasa 0m que significa 0 decimal
-            await _context.SaveChangesAsync();
-
-            // Ahora, en lugar de ir a Details → generar reporte o imprimir
-            return RedirectToAction("Print", new { id = invoice.InvoiceId });
+            return RedirectToAction("Details", new { id = invoice.InvoiceId });
         }
+
 
         // EDITAR
         [RoleAuthorize("Admin", "Contador")]
