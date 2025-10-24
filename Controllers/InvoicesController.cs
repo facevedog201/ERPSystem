@@ -85,16 +85,18 @@ namespace ERPSystem.Controllers
 
         public async Task<IActionResult> Print(int id)
         {
-            var datos = await _context.vw_FacturaCompleta
-                .Where(v => v.InvoiceId == id)
-                .ToListAsync();
+            var invoice = await _context.Invoices
+                .Include(i => i.Client)
+                .Include(i => i.InvoiceDetails).ThenInclude(d => d.Service)
+                .Include(i => i.Payments)
+                .FirstOrDefaultAsync(i => i.InvoiceId == id);
 
-            if (datos == null || !datos.Any())
+            if (invoice == null)
                 return NotFound();
 
-            // Generar RDLC / PDF a partir del dataset
-            return View("FacturaReport", datos);
+            return View("FacturaReport", invoice);
         }
+
 
         [RoleAuthorize("Admin", "Contador", "Recepcion", "Vendedor", "Asistente")]
         public IActionResult Create()

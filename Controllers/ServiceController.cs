@@ -16,6 +16,24 @@ namespace ERPSystem.Controllers
             _context = context;
         }
 
+        [HttpGet]
+        public IActionResult Search(string query)
+        {
+            var results = _context.Services
+                .Where(s => s.IsActive && (string.IsNullOrEmpty(query) || s.Name.Contains(query)))
+                .Select(s => new
+                {
+                    id = s.ServiceId,
+                    text = s.Name + (s.HasIVA ? " (con IVA)" : " (sin IVA)"),
+                    price = s.Price,
+                    hasiva = s.HasIVA
+                })
+                .Take(20)
+                .ToList();
+
+            return Json(results);
+        }
+
         // LISTAR SERVICIOS ACTIVOS con filtro
         public async Task<IActionResult> Index(string? name, bool? hasIVA, decimal? price)
         {
@@ -43,26 +61,46 @@ namespace ERPSystem.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> FilterServices(string? name, bool? hasIVA, decimal? price)
+        public async Task<IActionResult> FilterServices(string search)
         {
             var services = _context.Services
                                    .Where(s => s.IsActive)
                                    .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(name))
-                services = services.Where(s => EF.Functions.Like(s.Name, $"%{name}%"));
-
-            if (hasIVA.HasValue)
-                services = services.Where(s => s.HasIVA == hasIVA.Value);
-
-            if (price.HasValue)
-                services = services.Where(s => s.Price == price.Value);
+            if (!string.IsNullOrEmpty(search))
+            {
+                services = services.Where(s =>
+                    s.Name.Contains(search) ||
+                    (s.Description != null && s.Description.Contains(search)) ||
+                    s.Price.ToString().Contains(search) ||
+                    (s.HasIVA ? "IVA" : "No IVA").Contains(search));
+            }
 
             var list = await services.OrderBy(s => s.Name).ToListAsync();
-
-            // Retorna solo la tabla actualizada (sin layout)
             return PartialView("_ServicesTable", list);
         }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> FilterInactiveServices(string search)
+        {
+            var services = _context.Services
+                                   .Where(s => !s.IsActive)
+                                   .AsQueryable();
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                services = services.Where(s =>
+                    s.Name.Contains(search) ||
+                    (s.Description != null && s.Description.Contains(search)) ||
+                    s.Price.ToString().Contains(search) ||
+                    (s.HasIVA ? "IVA" : "No IVA").Contains(search));
+            }
+
+            var list = await services.OrderBy(s => s.Name).ToListAsync();
+            return PartialView("_ServicesTable", list);
+        }
+
 
 
         // LISTAR SERVICIOS INACTIVOS (Solo Admin)

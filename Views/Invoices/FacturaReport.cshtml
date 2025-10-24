@@ -1,0 +1,211 @@
+﻿@model ERPSystem.Models.Invoice
+@using System.Globalization
+
+@{
+    Layout = null; // Para impresión limpia
+    var culture = new CultureInfo("es-NI");
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <title>Factura @Model.InvoiceId</title>
+    <link rel="stylesheet" href="~/css/print.css" />
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            color: #000;
+            margin: 30px;
+        }
+
+        .invoice-container {
+            max-width: 900px;
+            margin: auto;
+            border: 1px solid #ddd;
+            padding: 30px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .company-info {
+            text-align: right;
+        }
+
+        .invoice-title {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            text-align: center;
+        }
+
+        .totals {
+            margin-top: 20px;
+            width: 50%;
+            float: right;
+        }
+
+        .totals th {
+            text-align: right;
+        }
+
+        .totals td {
+            text-align: right;
+        }
+
+        .clear { clear: both; }
+
+        .footer {
+            margin-top: 40px;
+            border-top: 1px solid #000;
+            padding-top: 10px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .amount-words {
+            margin-top: 10px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <!-- Encabezado -->
+        <div class="header">
+            <div class="logo">
+                <img src="~/images/logo.png" alt="Logo" style="max-height: 80px;" />
+            </div>
+            <div class="company-info">
+                <h3>Tu Empresa S.A.</h3>
+                <p>RUC: J031234567890</p>
+                <p>Tel: (505) 2222-2222</p>
+                <p>Managua, Nicaragua</p>
+            </div>
+        </div>
+
+        <!-- Título -->
+        <div class="invoice-title">Factura No. @Model.InvoiceId</div>
+
+        <!-- Datos del cliente -->
+        <table class="mt-4 mb-4">
+            <tr>
+                <th>Cliente</th>
+                <td>@Model.Client?.Name</td>
+                <th>RUC</th>
+                <td>@Model.Client?.RUC</td>
+            </tr>
+            <tr>
+                <th>Dirección</th>
+                <td>@Model.Client?.Address</td>
+                <th>Teléfono</th>
+                <td>@Model.Client?.Phone</td>
+            </tr>
+            <tr>
+                <th>Fecha de Factura</th>
+                <td>@(Model.InvoiceDate?.ToString("dd/MM/yyyy", culture))</td>
+                <th>Tasa de Cambio</th>
+                <td>@string.Format(culture, "{0:N2}", Model.ExchangeRate)</td>
+            </tr>
+            <tr>
+                <th>CIF</th>
+                <td>@string.Format(culture, "{0:C}", Model.CIF)</td>
+                <th>Referencia</th>
+                <td>@Model.Reference</td>
+            </tr>
+        </table>
+
+        <!-- Detalle de servicios -->
+        <table class="mt-3">
+            <thead>
+                <tr>
+                    <th>Servicio</th>
+                    <th class="text-center">Cantidad</th>
+                    <th class="text-center">Precio Unitario</th>
+                    <th class="text-center">IVA</th>
+                    <th class="text-center">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var d in Model.InvoiceDetails)
+                {
+                    var subtotal = d.Quantity * d.Price;
+                    var iva = d.Service.HasIVA ? subtotal * 0.15m : 0;
+                    <tr>
+                        <td>@d.Service.Name</td>
+                        <td class="text-center">@d.Quantity</td>
+                        <td class="text-end">@string.Format(culture, "{0:C}", d.Price)</td>
+                        <td class="text-end">@string.Format(culture, "{0:C}", iva)</td>
+                        <td class="text-end">@string.Format(culture, "{0:C}", subtotal + iva)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- Totales -->
+        <table class="totals">
+            <tr>
+                <th>Subtotal:</th>
+                <td>@string.Format(culture, "{0:C}", Model.SubTotal)</td>
+            </tr>
+            <tr>
+                <th>IVA (15%):</th>
+                <td>@string.Format(culture, "{0:C}", Model.TaxAmount)</td>
+            </tr>
+            <tr>
+                <th>CIF:</th>
+                <td>@string.Format(culture, "{0:C}", Model.CIF)</td>
+            </tr>
+            <tr>
+                <th>Total a Pagar:</th>
+                <td><strong>@string.Format(culture, "{0:C}", Model.Total)</strong></td>
+            </tr>
+        </table>
+
+        <div class="clear"></div>
+
+        <!-- Monto en letras -->
+        <div class="amount-words">
+            <strong>Monto en letras:</strong> @Model.AmountInWords
+        </div>
+
+        <!-- Observaciones -->
+        @if (!string.IsNullOrWhiteSpace(Model.Observations))
+        {
+            <div class="mt-3">
+                <strong>Observaciones:</strong>
+                <p>@Model.Observations</p>
+            </div>
+        }
+
+        <!-- Pie -->
+        <div class="footer">
+            <p>Gracias por su compra.</p>
+            <p>Documento generado el @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</p>
+        </div>
+    </div>
+</body>
+</html>

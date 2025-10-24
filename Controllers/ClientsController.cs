@@ -41,6 +41,61 @@ namespace ERPSystem.Controllers
             return View(await clients.ToListAsync());
         }
 
+        // Búsqueda dinámica de clientes (para Select2)
+        [HttpGet]
+        public IActionResult Search(string query)
+        {
+            var results = _context.Clients
+                .Where(c => (c.IsActive ?? false) && (string.IsNullOrEmpty(query) || c.Name.Contains(query)))
+                .Select(c => new
+                {
+                    id = c.ClientId,
+                    text = c.Name + " (" + c.RUC + ")"
+                })
+                .Take(20)
+                .ToList();
+
+            return Json(results);
+        }
+
+        [HttpGet]
+        public IActionResult FilterClients(string search)
+        {
+            var clients = _context.Clients
+                .Where(c => c.IsActive == true); // solo clientes activos
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                clients = clients.Where(c =>
+                    c.Name.Contains(search) ||
+                    (c.RUC != null && c.RUC.Contains(search)) ||
+                    (c.Phone != null && c.Phone.Contains(search)) ||
+                    (c.Email != null && c.Email.Contains(search))
+                );
+            }
+
+            return PartialView("_ClientsTable", clients.ToList());
+        }
+
+        [HttpGet]
+        public IActionResult FilterInactiveClients(string search)
+        {
+            var clients = _context.Clients
+                .Where(c => c.IsActive == false || c.IsActive == null); // solo inactivos
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                clients = clients.Where(c =>
+                    c.Name.Contains(search) ||
+                    (c.RUC != null && c.RUC.Contains(search)) ||
+                    (c.Phone != null && c.Phone.Contains(search)) ||
+                    (c.Email != null && c.Email.Contains(search))
+                );
+            }
+
+            return PartialView("_ClientsTable", clients.ToList());
+        }
+
         //// LISTAR CLIENTES ACTIVOS
         //public async Task<IActionResult> Index()
         //{

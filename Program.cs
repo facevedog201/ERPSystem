@@ -52,8 +52,14 @@ app.UseAuthorization();
 app.UseSession();
 
 // 🔹 Ruta por defecto: login
+// Ruta por defecto: login
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Login}/{action=Index}/{id?}");
+
+// Rutas ERP
+app.MapControllerRoute(
+    name: "erp",
+    pattern: "{controller}/{action}/{id?}");
 
 app.Run();

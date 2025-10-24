@@ -1,49 +1,66 @@
 ﻿@model IEnumerable<ERPSystem.Models.Service>
 @{
-    Layout = "_Layout";
     ViewData["Title"] = "Servicios Inactivos";
 }
 
-<h2>Servicios Inactivos</h2>
+<h1>@ViewData["Title"]</h1>
 
 <div class="mb-3">
-    <a class="btn btn-secondary" asp-action="Index">Volver a Servicios Activos</a>
+    <a asp-action="Index" class="btn btn-primary me-2">
+        <i class="bi bi-arrow-left me-2"></i> Ver Activos
+    </a>
 </div>
 
-@await Html.PartialAsync("_ServicesTable", Model)
+<!-- Buscador dinámico -->
+<div class="row mb-3">
+    <div class="col-md-6">
+        <input type="text" id="searchInputInactiveService" class="form-control"
+               placeholder="Buscar por nombre, descripción o precio..." />
+    </div>
+</div>
 
+<!-- Loader -->
+<div id="loadingSpinner" class="text-center my-3" style="display:none;">
+    <div class="spinner-border text-secondary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+    </div>
+</div>
 
-@* <table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Nombre</th>
-            <th>Descripción</th>
-            <th>Precio</th>
-            <th>Tipo</th>
-            <th>Activo</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.Name</td>
-                <td>@item.Description</td>
-                <td>@item.Price.ToString("C")</td>
-                <td>@item.Type</td>
-                <td>
-                    <span class="badge bg-danger">No</span>
-                </td>
-                <td>
-@*                     @* Solo Admin puede reactivar
-                    @if (User.IsInRole(UserRole.Admin.ToString()))
-                    {
-                        <a class="btn btn-sm btn-success" asp-action="Activate" asp-route-id="@item.ServiceId">Reactivar</a>
-                    }
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
- *@
+<!-- Contenedor -->
+<div id="servicesContainerInactive">
+    @await Html.PartialAsync("_ServicesTable", Model)
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            let typingTimer;
+            const doneTypingInterval = 400;
+
+            $("#searchInputInactiveService").on("keyup", function () {
+                clearTimeout(typingTimer);
+                const query = $(this).val();
+
+                typingTimer = setTimeout(function () {
+                    $.ajax({
+                        url: '/Services/FilterInactiveServices',
+                        type: 'GET',
+                        data: { search: query },
+                        beforeSend: function () {
+                            $("#loadingSpinner").fadeIn(150);
+                        },
+                        success: function (result) {
+                            $("#servicesContainerInactive").hide().html(result).fadeIn(150);
+                        },
+                        complete: function () {
+                            $("#loadingSpinner").fadeOut(150);
+                        },
+                        error: function () {
+                            console.error("Error al filtrar servicios inactivos");
+                        }
+                    });
+                }, doneTypingInterval);
+            });
+        });
+    </script>
+}

@@ -1,126 +1,158 @@
 ﻿@model ERPSystem.Models.Invoice
+@using System.Globalization
 
 @{
-    ViewData["Title"] = "Detalles Factura";
+    ViewData["Title"] = "Factura #" + Model.InvoiceId;
+    var culture = new CultureInfo("es-NI");
 }
 
-<h2>Factura #@Model.InvoiceId</h2>
+<div class="container mt-4 p-4 shadow-lg rounded bg-white border">
+    <div class="text-center mb-4">
+        <h2 class="fw-bold text-uppercase">Factura</h2>
+        <p class="text-muted mb-0">Número: <strong>@Model.InvoiceId</strong></p>
+        <p class="text-muted">Fecha: <strong>@(Model.InvoiceDate?.ToString("dd/MM/yyyy", culture) ?? "01/01/0000")</strong></p>
+    </div>
 
-<div class="mb-3">
-    <strong>Cliente:</strong> @Model.Client.Name <br />
-    <p><strong>Fecha:</strong> @(Model.InvoiceDate?.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture) ?? "01/01/0000")</p>
-    <p><strong>Total:</strong> @(Model.Total?.ToString("C") ?? "0.0")</p>
-    <p><strong>Pagado:</strong> @(Model.PaidAmount?.ToString("C") ?? "0.0")</p>
-    <strong>Estado:</strong>
-    <span class="badge @(
-          Model.Status.HasValue ?
-          (Model.Status.Value == (int)ERPSystem.Models.InvoiceStatus.Paid ? "bg-success" :
-           Model.Status.Value == (int)ERPSystem.Models.InvoiceStatus.Partial ? "bg-warning" :
-           Model.Status.Value == (int)ERPSystem.Models.InvoiceStatus.Cancelled ? "bg-danger" : "bg-secondary")
-          : "bg-secondary")">
-        @(Model.Status.HasValue ? ((ERPSystem.Models.InvoiceStatus)Model.Status.Value).ToString() : "9")
-    </span>
-</div>
+    <!-- Datos del Cliente -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h5 class="fw-bold">Datos del Cliente</h5>
+            <p class="mb-1"><strong>Nombre:</strong> @Model.Client?.Name</p>
+            <p class="mb-1"><strong>RUC:</strong> @Model.Client?.RUC</p>
+            <p class="mb-1"><strong>Teléfono:</strong> @Model.Client?.Phone</p>
+            <p class="mb-1"><strong>Correo:</strong> @Model.Client?.Email</p>
+            <p class="mb-0"><strong>Dirección:</strong> @Model.Client?.Address</p>
+        </div>
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+            <h5 class="fw-bold">Detalles de Factura</h5>
+            <p class="mb-1"><strong>Tipo:</strong> @(Model.Type == 1 ? "Contado" : "Crédito")</p>
+            <p class="mb-1"><strong>Tasa de Cambio:</strong> @string.Format(culture, "{0:N2}", Model.ExchangeRate)</p>
+            <p class="mb-1"><strong>CIF:</strong> @string.Format(culture, "{0:C}", Model.CIF)</p>
+            <p class="mb-1"><strong>Referencia:</strong> @Model.Reference</p>
+            <p class="mb-1">
+                <strong>Estado:</strong>
+                <span class="badge @(
+                      Model.Status == (int)ERPSystem.Models.InvoiceStatus.Paid ? "bg-success" :
+                      Model.Status == (int)ERPSystem.Models.InvoiceStatus.Partial ? "bg-warning text-dark" :
+                      Model.Status == (int)ERPSystem.Models.InvoiceStatus.Cancelled ? "bg-danger" :
+                      "bg-secondary"
+                                )">
+                    @((ERPSystem.Models.InvoiceStatus)Model.Status)
+                </span>
+            </p>
+        </div>
+    </div>
 
-<h4 class="mt-3">Servicios</h4>
-<table class="table table-bordered table-striped">
-    <thead class="table-dark">
-        <tr>
-            <th>Servicio</th>
-            <th>Cantidad</th>
-            <th>Precio</th>
-            <th>Total</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var d in Model.InvoiceDetails)
-        {
+    <!-- Tabla de Servicios -->
+    <h5 class="fw-bold border-bottom pb-2 mb-3">Detalle de Servicios</h5>
+    <table class="table table-striped table-bordered align-middle">
+        <thead class="table-dark text-center">
             <tr>
-                <td>@d.Service.Name</td>
-                <td>@d.Quantity</td>
-                <td>@d.Price.ToString("C")</td>
-                <td>@(d.Quantity* d.Price).ToString("C")</td>
-            </tr>
-        }
-    </tbody>
-</table>
-
-<h4 class="mt-3">Pagos</h4>
-@if (Model.Payments.Any())
-{
-    <table class="table table-bordered table-striped">
-        <thead class="table-dark">
-            <tr>
-                <th>Fecha</th>
-                <th>Monto</th>
-                <th>Notas</th>
+                <th>Servicio</th>
+                <th>Cantidad</th>
+                <th>Precio Unitario</th>
+                <th>IVA</th>
+                <th>Total</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var p in Model.Payments)
+            @foreach (var d in Model.InvoiceDetails)
             {
+                var subtotal = d.Quantity * d.Price;
+                var iva = d.Service.HasIVA ? subtotal * 0.15m : 0;
                 <tr>
-                    <td>@p.PaymentDate.ToString("dd/MM/yyyy")</td>
-                    <td>@p.Amount.ToString("C")</td>
-                    <td>@p.Notes</td>
+                    <td>@d.Service.Name</td>
+                    <td class="text-center">@d.Quantity</td>
+                    <td class="text-end">@string.Format(culture, "{0:C}", d.Price)</td>
+                    <td class="text-end">@string.Format(culture, "{0:C}", iva)</td>
+                    <td class="text-end">@string.Format(culture, "{0:C}", subtotal + iva)</td>
                 </tr>
             }
         </tbody>
     </table>
-}
-else
-{
-    <p>No se han registrado pagos para esta factura.</p>
-}
 
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">@TempData["Success"]</div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">@TempData["Error"]</div>
-}
-
-@if (Model.Status.HasValue
-    && Model.Status.Value != (int?)ERPSystem.Models.InvoiceStatus.Paid
-    && Model.Status.Value != (int?)ERPSystem.Models.InvoiceStatus.Cancelled)
-{
-    <h4 class="mt-3">Registrar Pago</h4>
-    <form asp-action="AddPayment" asp-controller="Invoices" method="post">
-        <input type="hidden" name="invoiceId" value="@Model.InvoiceId" />
-        <div class="mb-3">
-            <label>Monto a pagar</label>
-            <input type="number" name="amount" class="form-control" step="0.01" min="0.01" required />
+    <!-- Totales -->
+    <div class="row justify-content-end mt-4">
+        <div class="col-md-5">
+            <table class="table table-borderless text-end">
+                <tr>
+                    <th>Subtotal:</th>
+                    <td>@string.Format(culture, "{0:C}", Model.SubTotal)</td>
+                </tr>
+                <tr>
+                    <th>IVA (15%):</th>
+                    <td>@string.Format(culture, "{0:C}", Model.TaxAmount)</td>
+                </tr>
+                <tr>
+                    <th>CIF:</th>
+                    <td>@string.Format(culture, "{0:C}", Model.CIF)</td>
+                </tr>
+                <tr class="table-active">
+                    <th>Total a Pagar:</th>
+                    <td class="fw-bold">@string.Format(culture, "{0:C}", Model.Total)</td>
+                </tr>
+                <tr>
+                    <th>Pagado:</th>
+                    <td>@string.Format(culture, "{0:C}", Model.PaidAmount)</td>
+                </tr>
+            </table>
         </div>
-        <div class="mb-3">
-            <label>Notas</label>
-            <input type="text" name="notes" class="form-control" />
-        </div>
-        <button type="submit" class="btn btn-success">Registrar Pago</button>
-    </form>
-}
+    </div>
 
-@if ((User.IsInRole("Recepcion") || User.IsInRole("Vendedor") || User.IsInRole("Asistente"))
-    && Model.Status != (int?)ERPSystem.Models.InvoiceStatus.Paid
-    && Model.Status != (int?)ERPSystem.Models.InvoiceStatus.Cancelled)
-{
-    <h4 class="mt-3">Registrar Pago</h4>
-    <form asp-action="AddPayment" method="post">
-        <input type="hidden" name="invoiceId" value="@Model.InvoiceId" />
-        <div class="mb-3">
-            <label>Monto a pagar</label>
-            <input type="number" name="amount" class="form-control" step="0.01" min="0.01" required />
-        </div>
-        <div class="mb-3">
-            <label>Notas</label>
-            <input type="text" name="notes" class="form-control" />
-        </div>
-        <button type="submit" class="btn btn-success">Registrar Pago</button>
-    </form>
-}
+    <!-- Monto en letras -->
+    <div class="mt-3">
+        <strong>Monto en letras:</strong> <em>@Model.AmountInWords</em>
+    </div>
 
+    <!-- Observaciones -->
+    @if (!string.IsNullOrWhiteSpace(Model.Observations))
+    {
+        <div class="mt-3">
+            <strong>Observaciones:</strong>
+            <p>@Model.Observations</p>
+        </div>
+    }
 
-<p class="mt-3">
-    <a asp-action="Index" class="btn btn-secondary">Volver a Facturas</a>
-</p>
+    <!-- Pagos -->
+    <h5 class="fw-bold border-bottom pb-2 mt-4">Historial de Pagos</h5>
+    @if (Model.Payments.Any())
+    {
+        <table class="table table-sm table-bordered align-middle text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Monto</th>
+                    <th>Notas</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model.Payments)
+                {
+                    <tr>
+                        <td>@p.PaymentDate.ToString("dd/MM/yyyy")</td>
+                        <td class="text-end">@string.Format(culture, "{0:C}", p.Amount)</td>
+                        <td>@p.Notes</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No se han registrado pagos para esta factura.</p>
+    }
+
+    <!-- Botones -->
+    <div class="mt-4 text-end no-print">
+        <a asp-action="Index" class="btn btn-secondary">Volver</a>
+
+        <a asp-action="Print"
+           asp-route-id="@Model.InvoiceId"
+           class="btn btn-outline-primary"
+           target="_blank"
+           rel="noopener noreferrer">
+            <i class="bi bi-printer"></i> Imprimir Factura
+        </a>
+    </div>
+
+</div>

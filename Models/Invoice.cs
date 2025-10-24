@@ -63,7 +63,7 @@ namespace ERPSystem.Models
 
             string[] units = { "", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez", "once", "doce", "trece", "catorce", "quince", "dieciséis", "diecisiete", "dieciocho", "diecinueve" };
             string[] tens = { "", "", "veinte", "treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa" };
-            string[] hundreds = { "", "cien", "doscientos", "trescientos", "cuatrocientos", "quinientos", "seiscientos", "setecientos", "ochocientos", "novecientos" };
+            string[] hundreds = { "", "ciento", "doscientos", "trescientos", "cuatrocientos", "quinientos", "seiscientos", "setecientos", "ochocientos", "novecientos" };
 
             Func<long, string> toWords = null;
             toWords = n =>
@@ -85,7 +85,7 @@ namespace ERPSystem.Models
                 if (n < 1000)
                 {
                     if (n == 100)
-                        return "cien";
+                        return "ciento";
                     if (n % 100 == 0)
                         return hundreds[n / 100];
                     return hundreds[n / 100] + " " + toWords(n % 100);
